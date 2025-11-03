@@ -1,0 +1,21 @@
+# Ignore real data and large files
+data/*.csv
+data/*.rds
+data/*.RData
+data/*.sqlite
+data/*.zip
+data/*.tsv
+
+# Allow metadata and readme files
+!data/metadata_dictionary.csv
+!data/README_data.md
+
+# Ignore system or RStudio files
+.Rhistory
+.RData
+.Rproj.user/
+.Rproj
+.DS_Store
+*.tmp
+*.log
+
