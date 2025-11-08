@@ -1,7 +1,5 @@
 library(dplyr)
 library(stringr)
-getwd()
-setwd("~/Desktop/DBDM COURSEWORK DATA/processed_data/")
 
 data <-read.csv("merged_output.csv")
 
