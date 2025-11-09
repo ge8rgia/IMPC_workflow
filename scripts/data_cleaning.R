@@ -1,33 +1,58 @@
 library(dplyr)
 library(stringr)
 library(here)
-data <- read.csv(here("processed_data", "merged_output.csv"))
+
+#Function to cross referencing with SOP for cleaning Function
+run_cross_reference <-function(dataset_to_check) {
+  print("Mouse_life_stage_typo' ")
+  print(unique(dataset_to_check[ ,"mouse_life_stage"])) 
+  
+  print("Pvalue_summary' ")
+  print(summary(dataset_to_check$pvalue))
+  
+  print("'mouse_strain' typos")
+  dataset_to_check %>%
+    group_by(mouse_strain) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    print() # 
+  
+  print("Checking 'gene_symbol' typos")
+  dataset_to_check %>% 
+    filter(!str_detect(gene_symbol, "^[A-Z][a-z0-9]+$")) %>%
+    distinct(gene_symbol) %>%
+    print()
+  
+  print("gene_accession_id' typos")
+  dataset_to_check %>%
+    filter(!str_detect(gene_accession_id, "^MGI:")) %>%
+    distinct(gene_accession_id) %>%
+    print()
+  
+  print("parameter_id' typos")
+  dataset_to_check %>%
+    filter(!str_detect(parameter_id, "^[A-Z0-9_]+$")) %>%
+    distinct(parameter_id) %>%
+    print()
+}
+data <- read.csv(here("processed_data/", "merged_output.csv"))
 
 
-#Checking unique values in each field
-
+#Quick Summary
 for (field in colnames(data)) {
   count <- length(unique(data[ ,field]))
   print(paste("Currently", count, "unique values in", field))
 }
 
+run_cross_reference(data) #Check on unclean data
 
-
-#Cross referencing with SOP and Cleaning
-print(unique(data[ ,"mouse_life_stage"])) #Contains Typos which have to be cleaned
-
-summary(data$pvalue) #max exceeds 1 (1.4998), not possible according to SOP
-
-print(unique(data[ ,"mouse_strain"]))#Also contains typos, should only have 4:C57BL; B6J; C3H; 129SV
-
-data%>%
-  group_by(mouse_strain) %>%
-  summarise(count=n(), .groups="drop") #Identifies typos result in decreased C57Bl and 129sv count)
-
-typo_gene_symbol <-data%>% filter(!str_detect(gene_symbol,"^[A-Z][a-z0-9]+$")) %>%
-  distinct(gene_symbol)
-print(typo_gene_symbol) #Identified typos in gene symbol column
-
+#Mouse_life_stage:Contains typos which have to be cleaned
+#P_value, has a max which exceed 1(1.4998), requires cleaning
+#Mouse_strain: Contains typos, should only have the following 4:C57BL; B6J; C3H; 129SV, the typo effect C7BL and 129SV count
+#Gene_Symbol: Contains typos
+#Ascension ID: 86 in the wrong format (mgi)
+#Parameter_ID: 147 wrongly formatted
+#Analysis_ID: Doesn't require further cleaning
+#Parameter_Name: Doesnt require further cleaning 
 
 ####DATA_CLEANING#######
 
@@ -48,17 +73,18 @@ data_cleaned<- data %>%
 gene_symbol = str_to_title(gene_symbol),#Gene symbol converted to SOP format.
                        
 pvalue=as.numeric(pvalue),
-pvalue=if_else(pvalue <0 | pvalue >1, NA_real_, pvalue)
-)#Set values which dont fit SOP to NA (266)    
+pvalue=if_else(pvalue <0 | pvalue >1, NA_real_, pvalue), #Set values which dont fit SOP to NA (266)
+
+gene_accession_id = str_replace(gene_accession_id, "^mgi:", "MGI:"),#Corrects mgi to correct format (MGI)
+
+parameter_id = str_to_upper(parameter_id),
+parameter_id = str_replace_all(parameter_id,"-","_")
+)
 
 #Verifying
-summary(data_cleaned$pvalue)
+run_cross_reference(data_cleaned) #Clean and can now save
+#Save clean data 
+write.csv(data_cleaned,
+          here("processed_data", "cleaned_merged_output.csv"),
+          row.names = FALSE)
 
-print(unique(data_cleaned$mouse_life_stage))
-
-data_cleaned%>%
-  group_by(mouse_strain) %>%
-  summarise(count=n(), .groups="drop")
-
-data_cleaned %>% filter(!str_detect(gene_symbol,"^[A-Z][a-z0-9]+$")) %>%
-  distinct(gene_symbol)
