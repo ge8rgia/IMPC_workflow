@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Output file for merged CSV
-OUTPUT_FILE="merged_output.csv"
+mkdir -p processed_data
+OUTPUT_FILE="processed_data/merged_output.csv"
 
 # Check if formatted_csvs directory exists
 if [ ! -d "formatted_csvs" ]; then
