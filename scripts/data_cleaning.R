@@ -1,6 +1,6 @@
 library(dplyr)
 library(stringr)
-library(here)
+
 
 #Function to cross referencing with SOP for cleaning Function
 run_cross_reference <-function(dataset_to_check) {
@@ -34,7 +34,7 @@ run_cross_reference <-function(dataset_to_check) {
     distinct(parameter_id) %>%
     print()
 }
-data <- read.csv(here("processed_data/", "merged_output.csv"))
+data <- read.csv("../processed_data/merged_output.csv")
 
 
 #Quick Summary
@@ -85,6 +85,6 @@ parameter_id = str_replace_all(parameter_id,"-","_")
 run_cross_reference(data_cleaned) #Clean and can now save
 #Save clean data 
 write.csv(data_cleaned,
-          here("processed_data", "cleaned_merged_output.csv"),
+          "../processed_data/cleaned_merged_output.csv",
           row.names = FALSE)
 
