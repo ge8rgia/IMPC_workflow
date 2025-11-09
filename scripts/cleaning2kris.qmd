@@ -1,0 +1,179 @@
+---
+title: "Cleaning"
+format: html
+editor: visual
+---
+
+## Libraries and Packages
+
+```{r}
+install.packages("dplyr")
+install.packages("stringr")
+library(dplyr)
+library(stringr)
+```
+
+## Setting working directory, loading data, loading SOP
+
+```{r}
+setwd("/scratch/grp/msc_appbio/DCDM/Group3")
+data <- read.csv("/scratch/grp/msc_appbio/DCDM/Group3/processed_data/merged_output.csv")
+SOP <- read.csv("/scratch/grp/msc_appbio/DCDM/Group3/metadata/IMPC_SOP.csv")
+head(SOP)
+```
+
+## Checking unique values in each field
+
+```{r}
+for (field in colnames(data)) {
+  count <- length(unique(data[ ,field]))
+  print(paste("Currently", count, "unique values in", field))
+}
+```
+
+# Checking each field against SOP values
+
+## 1. Mouse Life Stage - 7 developmental stages
+
+```{r}
+print(unique(data[ ,"mouse_life_stage"]))
+#contains capitalisation errors
+```
+
+## 2. Mouse Strain - 4 possible strains
+
+```{r}
+print(unique(data[ ,"mouse_strain"]))
+#contains typos - shows 17 possible mousw strains which is incorrect
+
+data%>%
+  group_by(mouse_strain) %>%
+  summarise(count=n(), .groups="drop")
+#shows the frequencies of different typos 
+
+```
+
+## 3. Gene Symbol
+
+```{r}
+print(unique(data[ ,"gene_symbol"]))
+typo_gene_symbol <-data%>% filter(!str_detect(gene_symbol,"^[A-Z][a-z0-9]+$")) %>%
+  distinct(gene_symbol)
+print(typo_gene_symbol)
+#typos in gene symbol column
+```
+
+## 4. p-value - should be between 0 and 1
+
+```{r}
+summary(data$pvalue)
+#shows that the max value is 1.4998 and the min = -0.4870
+```
+
+## 5. Parameter ID
+
+```{r}
+typo_parameter_id <- all(toupper(data$parameter_id) == data$parameter_id)
+print(typo_parameter_id)
+#true/false vector for capitalisation, FALSE, therefore some parameter_ids are not all capitalised
+data[ data$parameter_id != toupper(data$parameter_id), "parameter_id" ] %>% unique()
+#prints typos
+```
+
+## 6. Gene Accession ID
+
+```{r}
+typo_geneaccession_id <- all(toupper(data$gene_accession_id) == data$gene_accession_id)
+print(typo_geneaccession_id)
+#true/false vector for capitalisation - FALSE, therefore some gene_accession_ids are not capitalised
+data[ data$gene_accession_id != toupper(data$gene_accession_id), "gene_accession_id" ] %>% unique()
+#prints typos
+```
+
+# Data Cleaning Pipeline
+
+```{r}
+valid_strains <-c("C57BL", "B6J", "C3H", "129SV") #specifiying valid mouse strains from SOP
+
+data_cleaned <- data %>% 
+  mutate(
+    mouse_life_stage = str_to_sentence(na_if(str_to_lower(
+                                           str_squish(mouse_life_stage)
+                                           ),"na")), #capitalising only first letter of string
+    
+    mouse_strain=case_when
+    (str_detect(mouse_strain,"C5[0-9]BL")~ "C57BL",
+    str_detect(mouse_strain,"12[0-9]SV")~"129SV",
+    mouse_strain %in% valid_strains ~ mouse_strain, #Keeps valid strains, capitalising only first letter of string, sets missing values to NA 
+      TRUE ~ NA_character_
+  ),
+  
+  gene_symbol = str_to_title(gene_symbol), #Gene symbol converted to SOP format.
+  
+  gene_accession_id = toupper(gene_accession_id), #Gene accession id to all capitals - standard format
+    parameter_id = toupper(parameter_id), #Parameter id to all capitals - standard format
+                       
+pvalue=as.numeric(pvalue),
+pvalue=if_else(pvalue <0 | pvalue >1, NA_real_, pvalue)
+) #Setting values which do not fit SOP to NA    
+```
+
+# Verifying
+
+## 1. Verify Mouse Life Stage
+
+```{r}
+print(unique(data_cleaned$mouse_life_stage)) #now 7 possible developmental stages
+```
+
+## 2. Verify Mouse Strain
+
+```{r}
+data_cleaned%>%
+  group_by(mouse_strain) %>%
+  summarise(count=n(), .groups="drop")
+
+sum(data$mouse_strain == "C57BL", na.rm = TRUE)
+sum(data_cleaned$mouse_strain == "C57BL", na.rm = TRUE) 
+
+sum(data$mouse_strain == "129SV", na.rm = TRUE)
+sum(data_cleaned$mouse_strain == "129SV", na.rm = TRUE)
+
+#sum(data$mouse_strain == "B6J", na.rm = TRUE)
+#sum(data$mouse_strain == "C3H", na.rm = TRUE)
+```
+
+## 3. Verify Gene Symbol
+
+```{r}
+data_cleaned %>% filter(!str_detect(gene_symbol,"^[A-Z][a-z0-9]+$")) %>%
+  distinct(gene_symbol)
+```
+
+## 4. Verify p-value
+
+```{r}
+summary(data_cleaned$pvalue)
+```
+
+## 5. Verify Parameter ID
+
+```{r}
+data_cleaned %>%
+  filter(parameter_id != toupper(parameter_id)) %>%
+  distinct(parameter_id)
+#0 problematic, all the same format
+all(data_cleaned$parameter_id == toupper(data_cleaned$parameter_id))
+#true - all strings are capitalised
+```
+
+## 6. Verify Gene Accession ID
+
+```{r}
+data_cleaned %>%
+  filter(gene_accession_id != toupper(gene_accession_id)) %>%
+  distinct(gene_accession_id)
+#0 problematic, all the same format
+all(data_cleaned$gene_accession_id == toupper(data_cleaned$gene_accession_id))
+#true - all strings are capitalised
+```
