@@ -28,4 +28,6 @@ data <-data%>%
                                 str_detect(mouse_strain,"12[0-9]SV")~"129sv",)
   ) #Fixes Typos
                                 
-
+typo_gene_symbol <-data%>% filter(!str_detect(gene_symbol,"'[A-Z][a-z0-9]+$")) %>%
+  distinct(gene_symbol)
+print(typo_gene_symbol) #Identified typos in gene symbol column
