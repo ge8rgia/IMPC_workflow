@@ -1,7 +1,7 @@
 library(dplyr)
 library(stringr)
 library(here)
-data <- read.csv(here("data", "merged_output.csv"))
+data <- read.csv(here("processed_data", "merged_output.csv"))
 
 
 #Checking unique values in each field
