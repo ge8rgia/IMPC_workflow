@@ -1,11 +1,24 @@
 #!/bin/bash
 
+#Pitfall contingency
+set -e
+set -o pipefail #1st line makes script exit if any command below fails, whilst pipefail means
+                #if any part of a pipeline (includes command including "|") the pipe stops
+
 #Setup
 INPUT_DIR="data"
 OUTPUT_DIR="formatted_csvs"
 
 mkdir -p "$OUTPUT_DIR" # Create formatted_csvs directory if not present 
 
+
+#Checks if the input directory exists before executing 
+if [ ! -d "$INPUT_DIR" ]; then
+    echo "Error: Input directory '$INPUT_DIR' not found." >&2
+    exit 1
+fi
+
+#Parralel head gathering process
 printf "Retrieving headers (in parallel)...\n" #Parralel head gathering process
 
 CPU_CORES=8 #Manually set to using 8 CPU Cores for parralel tasks
@@ -15,21 +28,30 @@ HEADER_STRING=$(find "$INPUT_DIR/" -name "*.csv" -print0 | \
 xargs -0 -P "$CPU_CORES" -n 100 awk -F',' '$1 != "" {print tolower($1)}' | \
 sort -u | tr '\n' ',' | sed 's/,$//')
 
+if [ -z "$HEADER_STRING" ]; then
+    echo "Error: No headers found in $INPUT_DIR. Check directory or file contents." >&2
+    exit 1
+fi          #Checks if any headers exist to begin with if not, exists the process
+
 printf "Headers retrieved! Found %s unique headers.\n" "$(echo "$HEADER_STRING" | tr ',' '\n' | wc -l)"
 
-NUM_OF_CSV_FILES=$(ls "$INPUT_DIR"/*.csv | wc -l | xargs)
-printf "Progress: 0/%s" "$NUM_OF_CSV_FILES" #Runs awk once per file 
+#%s: string placeholder, 'tr': comma converter to new lines, for pipe to count (wc -l)
+
+
+NUM_OF_CSV_FILES=$(ls "$INPUT_DIR"/*.csv | wc -l | xargs)  #counts csv files in data dir,
+                                                           #xarg trims the white space
+printf "Progress: 0/%s" "$NUM_OF_CSV_FILES" #gives user initial merge progress 
 
 x=0
 # Process each CSV file in the current directory
 for csv_file in "$INPUT_DIR"/*.csv; do
-    x=$((x+1))
+    x=$((x+1)) #Incriment file counter 
     output_file="$OUTPUT_DIR/$(basename "$csv_file")"
 
-    # Write the master header string to the new file
-    echo "$HEADER_STRING" > "$output_file"
+    
+    echo "$HEADER_STRING" > "$output_file" #Writes main header to the outputfile 
 
-    #  This is the new, fast awk command
+    #  Runs once per command,makes columns to headers 
      awk -F',' -v headers="$HEADER_STRING" '  # We run awk ONCE per file.
     BEGIN {
         split(headers, header_array, ",")  # Split the master header list into an awk array
@@ -46,7 +68,7 @@ for csv_file in "$INPUT_DIR"/*.csv; do
             for (i=3; i<=NF; i++) {
                 value = value "," $i
             }
-            data[tolower($1)] = value
+            data[tolower($1)] = value #Stores lowercase keys, to allow for case-insensitive matching
         }
     }
     # Runs once after the whole file is read
@@ -67,8 +89,8 @@ for csv_file in "$INPUT_DIR"/*.csv; do
     }
     ' "$csv_file" >> "$output_file" # Awk reads the file and appends its output
 
-    printf "\rProgress: %s/%s" "$x" "$NUM_OF_CSV_FILES"
+    printf "\rProgress: %s/%s" "$x" "$NUM_OF_CSV_FILES" #Updates progress counter as script runs 
 done
 
 printf "\n"
-echo "Done! Reformatted files are in $OUTPUT_DIR"
+echo "Done! Reformatted files are in $OUTPUT_DIR" #Success message 
