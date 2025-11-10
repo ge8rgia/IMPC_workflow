@@ -21,10 +21,10 @@ fi
 #Parralel head gathering process
 printf "Retrieving headers (in parallel)...\n" #Parralel head gathering process
 
-CPU_CORES=8 #Manually set to using 8 CPU Cores for parralel tasks, ideal for HPC set to 2-4 for local
+CPU_CORES=8 #Manually set to using 8 CPU Cores for parralel tasks
 
 # Use find, xargs, and awk to do this in parallel, using the set number of cores
-HEADER_STRING=$(find "$INPUT_DIR/" -maxdepth 1 -name "*.csv" -print0 | \
+HEADER_STRING=$(find "$INPUT_DIR/" -name "*.csv" -print0 | \
 xargs -0 -P "$CPU_CORES" -n 100 awk -F',' '$1 != "" {print tolower($1)}' | \
 sort -u | tr '\n' ',' | sed 's/,$//')
 
@@ -33,46 +33,47 @@ if [ -z "$HEADER_STRING" ]; then
     exit 1
 fi          #Checks if any headers exist to begin with if not, exists the process
 
-printf "Headers retrieved, Found %s unique headers.\n" "$(echo "$HEADER_STRING" | tr ',' '\n' | wc -l)"
+printf "Headers retrieved! Found %s unique headers.\n" "$(echo "$HEADER_STRING" | tr ',' '\n' | wc -l)"
 
 #%s: string placeholder, 'tr': comma converter to new lines, for pipe to count (wc -l)
 
-#Parralel file processing
-NUM_OF_CSV_FILES=$(find "$INPUT_DIR" -maxdepth 1 -name "*.csv" | wc -l) #gets file counts
-printf "Progressing %s in parralel ...\n" "$NUM_OF_CSV_FILES" #gives user start message  
+
+NUM_OF_CSV_FILES=$(ls "$INPUT_DIR"/*.csv | wc -l | xargs)  #counts csv files in data dir,
+                                                           #xarg trims the white space
+printf "Progress: 0/%s" "$NUM_OF_CSV_FILES" #gives user initial merge progress 
 
 x=0
-# Process each CSV file in the current directory via a function
-process_file() {
-    csv_file="$1" # The file path is the first argument
+# Process each CSV file in the current directory
+for csv_file in "$INPUT_DIR"/*.csv; do
+    x=$((x+1)) #Incriment file counter 
     output_file="$OUTPUT_DIR/$(basename "$csv_file")"
 
-     echo "$HEADER_STRING" > "$output_file" #writes main header to output file
+    
+    echo "$HEADER_STRING" > "$output_file" #Writes main header to the outputfile 
 
-#sets input field seperator to comma, splits the header strings into array before storing in
-      #header count    
-     awk -F',' -v headers="$HEADER_STRING" '
+    #  Runs once per command,makes columns to headers 
+     awk -F',' -v headers="$HEADER_STRING" '  # We run awk ONCE per file.
     BEGIN {
-        split(headers, header_array, ",")
-        header_count = length(header_array)
-    }
-#Reads every line in file and commits  key-value pair to memory 
-    {
-#Get the entire value by finding the first comma and taking the rest of the line 
-        if ($1 != "") {
-            # Find the position of the first comma (used as field separator)
-            first_comma_pos = index($0, ",")
-#value is rest of line after first comma, if comma is found string starts from character after comma
-            if (first_comma_pos > 0) {
-                value = substr($0, first_comma_pos + 1) 
-            } else {
-                value = "" # Should not happen in key,value format, but safety mechanism
-            }
+        split(headers, header_array, ",")  # Split the master header list into an awk array
 
-            data[tolower($1)] = value   #Store value with lowercase key for case-insensitive matching
-        } 
-#Runs once after the whole file is read 
+        header_count = length(header_array) # Get length of header array
+    }
+
+    # Read every line of the file and store its key-value pair to memory
+    {
+        # Store value, key is lowercase parameter name, skip empty
+        if ($1 != "") {
+
+            value = $2            # Combine all fields after the first, in case value has a comma
+            for (i=3; i<=NF; i++) {
+                value = value "," $i
+            }
+            data[tolower($1)] = value #Stores lowercase keys, to allow for case-insensitive matching
+        }
+    }
+    # Runs once after the whole file is read
     END {
+
         for (i = 1; i <= header_count; i++) { # Loop function to go through the headers IN ORDER
             header = header_array[i]
 
@@ -80,7 +81,7 @@ process_file() {
 
             printf "%s", value # Print the value. If it was empty, this prints nothing.
             if (i < header_count) {
-                printf "," # Add comma as seperator, but not for last item avoiding trailing comma
+                printf "," # Add a comma, but not for the last item.
             }
         }
 
@@ -88,16 +89,8 @@ process_file() {
     }
     ' "$csv_file" >> "$output_file" # Awk reads the file and appends its output
 
-}
-#Export function and the variables its made to run xarg
-export -f process_file
-export HEADER_STRING OUTPUT_DIR
+    printf "\rProgress: %s/%s" "$x" "$NUM_OF_CSV_FILES" #Updates progress counter as script runs 
+done
 
-#parallel task uses , xarg removes white spaces
-find "$INPUT_DIR" -maxdepth 1 -name "*.csv" -print0 \   # emit NUL-delimited paths, avoids subdir
-| xargs -0 -P "$CPU_CORES" \                             # read NUL paths to let  run in parallel
-    bash -c 'process_file "$@"' _                        #bash wrapper lets $0 becomes _, files in "$@"
-
-
-
+printf "\n"
 echo "Done! Reformatted files are in $OUTPUT_DIR" #Success message 
