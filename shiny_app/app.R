@@ -20,4 +20,23 @@ data_rshiny <- data_rshiny %>%
 ##Creating the user interface within the app
 ui <- fluidPage(
   titlepanel ("IMPC Phenotype Explorer"),
+) tabsetPanel(
+  id = "main tabs",
+  tabPanel("Explore via Gene Knockout",
+           sidebarLayout(
+             sidebarPanel (width = 3,
+                           selectInput("Genotype_select",
+                                       "Select Genotype:",
+                                       choices =NULL),
+                           numericInput("Significance Threshold (pvalue):",
+                                        value = 0.05,
+                                        min = 0.0,
+                                        max=1.0
+                                        step =0.01),
+                           )
+           ),
+           column(9,
+                  box(width=12,))
+             
+           ))
 )
