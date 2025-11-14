@@ -13,7 +13,7 @@ CREATE TABLE Phenotype_Analysis (
  mouse_strain  VARCHAR(10),
   parameter_id VARCHAR(25),
   parameter_name VARCHAR(100),
-  pvalue  FLOAT
+  pvalue FLOAT
 );
 
 
