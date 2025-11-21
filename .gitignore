@@ -13,7 +13,7 @@ data/*.tsv
 # Ignore system or RStudio files
 .Rhistory
 .RData
-.Rproj.user/
+*.Rproj.user/
 *.Rproj
 .DS_Store
 *.tmp
