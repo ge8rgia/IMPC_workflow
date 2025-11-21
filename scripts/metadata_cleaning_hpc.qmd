@@ -417,7 +417,7 @@ write.csv(disease_info_clean, file = "/scratch/grp/msc_appbio/DCDM/Group3/proces
 write.csv(IMPC_parameter_clean_final, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/IMPC_parameter_clean.csv",
           row.names = FALSE)
 
-nowrite.csv(IMPC_procedure_clean, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/IMPC_procedure_clean.csv",
+write.csv(IMPC_procedure_clean, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/IMPC_procedure_clean.csv",
           row.names = FALSE)
 ```
 
