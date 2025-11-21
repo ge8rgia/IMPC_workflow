@@ -19,3 +19,4 @@ data/*.tsv
 *.tmp
 *.log
 
+.Rproj.user

@@ -18,7 +18,7 @@ library(dplyr) #we need gene, phenotype, score
 #Phenotype = parameter name to be selected 
 #Score = JUST the p values? double check
 
-data <- read.csv("/Users/yzk/Desktop/DCDM/IMPC_only_merged_data.csv")
+data <- read.csv("/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/processed_data/cleaned_merged_output.csv")
 phenotype_list <- unique(data$parameter_name)
 phenotype_list
 

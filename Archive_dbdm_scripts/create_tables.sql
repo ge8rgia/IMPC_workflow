@@ -235,3 +235,4 @@ LEFT JOIN
     IMPC_Database.PROCEDURE_INFO proc ON ppl.procedure_name = proc.procedure_name
 Where
 pd.parameterId = 'IMPC_GEP_004_002';
+create_tables.sql
