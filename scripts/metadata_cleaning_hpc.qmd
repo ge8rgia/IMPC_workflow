@@ -15,7 +15,7 @@ library(tidyr)
 ## Setting working directory, loading data
 
 ```{r}
-setwd("/scratch/grp/msc_appbio/DCDM/Group3/")
+setwd("/scratch/grp/msc_appbio/DCDM/Group3")
 disease_info <- read_tsv("/scratch/grp/msc_appbio/DCDM/Group3/metadata/Disease_information.txt", col_types = cols(.default = "c"))
 IMPC_parameter <- read_csv("/scratch/grp/msc_appbio/DCDM/Group3/metadata/IMPC_parameter_description.txt", col_types = cols(.default = "c"))
 IMPC_procedure <- read_csv("/scratch/grp/msc_appbio/DCDM/Group3/metadata/IMPC_procedure.txt", col_types = cols(.default = "c"))
@@ -170,12 +170,12 @@ parametername_noncaps
 
 # description Column
 
-# description format --> should have underscore between words only
+# description format
 
-# Missing _
-sum(grepl(" ", IMPC_parameter$description)) #92 do not have underscores separating words and are separated by spaces
+# _ between description words
+sum(grepl("_", IMPC_parameter$description)) #2215 have _ separating words
 paramdescrip_missing_underscore <- IMPC_parameter$description[grepl(" ", IMPC_parameter$description)]
-paramdescrip_missing_underscore
+paramdescrip_missing_underscore #Those without _ have a cleaner description format
 
 # Beginning with _
 sum(grepl("^_", IMPC_parameter$description)) #15 begin with _ not standard format
@@ -189,11 +189,14 @@ sum(grepl("_+$", IMPC_parameter$description)) #78 end with _ not standard format
 paramdescrip_ends_with_underscore <- IMPC_parameter$description[grepl("_+$", IMPC_parameter$description)]
 paramdescrip_ends_with_underscore 
 
-# Standard format should begin with lowercase
-all(grepl("^[a-z]", IMPC_parameter$description)) #FALSE
+# Standard format should begin capital
+all(grepl("^[A-Z]", IMPC_parameter$description)) #FALSE
 # to view them
-paramdescrip_not_lowercase <- IMPC_parameter$description[!grepl("^[a-z]", IMPC_parameter$description)]
-paramdescrip_not_lowercase # some in non-standard format, also shows missing descriptions (NAs), and some beginning with numbers 
+paramdescrip_upper <- IMPC_parameter$description[!grepl("^[a-z]", IMPC_parameter$description)]
+paramdescrip_upper
+paramdescrip_not_upper <- IMPC_parameter$description[!grepl("^[A-Z]", IMPC_parameter$description)]
+paramdescrip_not_upper # different formats, also shows missing descriptions (NAs), and some beginning with numbers 
+# Less begin with uppercase, but for a cleaner format beginning with a capital is better
 
 # parameter_id column
 
@@ -252,10 +255,10 @@ IMPC_parameter_clean <- IMPC_parameter %>%
   #Cleaning description formatting
   mutate(
     description = description %>%
-      str_replace_all(" ", "_") %>% #Replacing spaces with _
+      str_replace_all("_", " ") %>% #Replacing _ with spaces
       str_replace("^_+", "") %>% #Removing leading _
       str_replace("_+$", "") %>% #Removing ending _
-      str_replace("^([A-Z])", tolower) #Lowercase
+      str_to_sentence() #Beginning with uppercase
   ) %>%
   #Cleaning name formatting 
   mutate(
@@ -327,7 +330,7 @@ IMPC_procedure_clean <- IMPC_procedure %>%
 
 # Check for multi-OMIM IDs
 check_disease_info(disease_info_clean)
-#0 multi-OMIM IDs
+# 0 multi-OMIM IDs
 
 # Check DO_Disease_Name begins with capital
 all(grepl("^[A-Z]", disease_info_clean$DO_Disease_Name)) #FALSE
@@ -336,7 +339,7 @@ all(grepl("^[A-Z]", disease_info_clean$DO_Disease_Name)) #FALSE
 
 sum(str_detect(disease_info_clean$DO_Disease_Name, "^[0-9]")) #4 start with number
 
-#checks that besides the entries that start with a number, the rest begin with capitals
+# Checks that besides the entries that start with a number, the rest begin with capitals
 all(grepl("^[A-Z]", disease_info_clean$DO_Disease_Name[!grepl("^[0-9]", disease_info_clean$DO_Disease_Name)]), na.rm = TRUE) #TRUE 
 ```
 
@@ -346,7 +349,7 @@ all(grepl("^[A-Z]", disease_info_clean$DO_Disease_Name[!grepl("^[0-9]", disease_
 audit_file(IMPC_parameter_clean, "IMPC Parameter Cleaned Descriptions")
 #0 duplicates
 
-sum(grepl(" ", IMPC_parameter_clean$description)) #0 are missing _
+sum(grepl("_", IMPC_parameter_clean$description)) #0 have _
 sum(grepl("^_", IMPC_parameter_clean$description)) #0 begin with _
 sum(grepl("_+$", IMPC_parameter_clean$description)) #0 end with _
 
@@ -355,12 +358,13 @@ all(grepl("^[A-Z]", IMPC_parameter_clean$name)) #FALSE
 # Check why:
 sum(grepl("^[A-Z]", IMPC_parameter_clean$name)) #5222 capitals
 sum(!grepl("^[A-Z]", IMPC_parameter_clean$name)) #89 do not begin with capitals 
-IMPC_parameter_clean$name[!grepl("^[A-Z]", IMPC_parameter_clean$name)] #those that do not start with capitals start with numbers, %, special characters, or their format needed to be preserved this way
+# Check:
+IMPC_parameter_clean$name[!grepl("^[A-Z]", IMPC_parameter_clean$name)] #those that start with numbers, %, special characters, or their format needed to be preserved this way
 # E.g. Has not capitalised those that start with a special character or begin with lowercase followed by uppercase
 IMPC_parameter_clean %>%
   filter(!str_detect(name, "^[A-Z0-9%]"))
 
-sum(grepl("^[A-Z]", IMPC_parameter_clean$description)) #0 begin with capital letter 
+sum(grepl("^[a-z]", IMPC_parameter_clean$description)) #0 begin with lower case letter 
 ```
 
 ## 3. Checking IMPC Procedure
@@ -374,13 +378,46 @@ sum(is.na(IMPC_procedure_clean$description)) #3255 rows are NA/empty fields
 # 5311 total rows, therefore all descriptions are in capital, cleaning has worked
 ```
 
+# Dealing with non-IMPC Parameter ID
+```{r}
+# Loading cleaned data
+clean_data <- read.csv("/scratch/grp/msc_appbio/DCDM/Group3/processed_data/clean_merged_data.csv", sep = ",", header = TRUE)
+head(clean_data$parameter_id)
+
+# Extracting all parameter_ids from data that are not in the IMPC Parameter metadata (missing), do not begin with IMPC... e.g. ESLIM..., HMGULA..., M_G_P... 
+mismatched_id <- clean_data[!(clean_data$parameter_id %in% IMPC_parameter_clean$parameter_id), ]
+# Extracting all of the unique mismatched parameter IDs
+missing_id <- unique(mismatched_id$parameter_id)
+print(paste("Number of missing parameter IDs:", length(missing_id))) #54 non IMPC missing parameter_id
+print(missing_id)
+
+# Building new parameter records for these, matching the column structure of IMPC_parameter_clean
+new_parameter_id <- mismatched_id %>%
+  select(parameter_id, parameter_name) %>%
+  distinct() %>%
+  arrange(parameter_id) %>%
+  mutate(
+    impcParameterOrigId = as.character(99999 + row_number()),
+    name = parameter_name,
+    parameter_id = parameter_id,
+    description = "Generated during R cleaning due to missing Parameter ID metadata"
+  ) %>%
+  select(colnames(IMPC_parameter_clean))
+
+
+# Adding the missing parameter_ids to the IMPC Parameter description metadata with the appropriate description 
+IMPC_parameter_clean_final <- bind_rows(IMPC_parameter_clean, new_parameter_id)
+```
+
+# Saving as new .csv
 ```{r}
 write.csv(disease_info_clean, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/disease_information_clean.csv",
           row.names = FALSE)
 
-write.csv(IMPC_parameter_clean, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/IMPC_parameter_clean.csv",
+write.csv(IMPC_parameter_clean_final, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/IMPC_parameter_clean.csv",
           row.names = FALSE)
 
-write.csv(IMPC_procedure_clean, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/IMPC_procedure_clean.csv",
+nowrite.csv(IMPC_procedure_clean, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/IMPC_procedure_clean.csv",
           row.names = FALSE)
 ```
+
