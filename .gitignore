@@ -14,7 +14,7 @@ data/*.tsv
 .Rhistory
 .RData
 .Rproj.user/
-.Rproj
+*.Rproj
 .DS_Store
 *.tmp
 *.log
