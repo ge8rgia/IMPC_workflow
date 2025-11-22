@@ -65,7 +65,7 @@ ui <- fluidPage(
                  sliderInput("fdr_threshold_group", "2. Select FDR Threshold (Significant Genes):",
                              min = 0.001, max = 0.1, value = 0.05, step = 0.005),
                  checkboxInput(inputId = "sig_only_T2", 
-                               label = "2. Show only significant results (FDR < 0.05)", 
+                               label = "Show only significant results (FDR < 0.05)", 
                                value = FALSE) 
                ),
                mainPanel(
@@ -156,7 +156,7 @@ server <- function (input, output, session) {
       
       labs(title = NULL, # Title handled by renderText
            x = "Phenotype Parameter",
-           y = "-log10(FDR-Adjusted p-value)") +
+           y = "-log10(FDR-adjusted p-value)") +
       
       scale_color_manual(name = paste0("FDR < ", input$Significance_Threshold_T1),
                          values = c("gray50", "#0072B2"), # Insignificant, Significant
@@ -254,6 +254,3 @@ observeEvent(input$sig_only_T2, {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
-
-
