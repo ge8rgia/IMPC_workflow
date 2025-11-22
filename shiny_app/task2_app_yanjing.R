@@ -18,8 +18,8 @@ library(dplyr) #we need gene, phenotype, score
 #Phenotype = parameter name to be selected 
 #Score = JUST the p values? double check
 
-data <- read.csvdata <- read.csv("/Users/yzk/Desktop/DCDM/IMPC_only_merged_data.csv",
-                                 stringsAsFactors = FALSE) #to prevent character vectors (text data) from being automatically converted into factors
+data <- read.csv("/Users/yzk/Desktop/DCDM/impc_export.csv",
+                 stringsAsFactors = FALSE) #to prevent character vectors (text data) from being automatically converted into factors
 phenotype_list <- unique(data$parameter_name)
 phenotype_list
 
