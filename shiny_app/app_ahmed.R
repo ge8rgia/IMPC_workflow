@@ -4,13 +4,16 @@ library(shiny)
 library(ggplot2)
 library(dplyr)
 
-data_rshiny <- read.csv("/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/processed_data/cleaned_merged_output.csv", 
+data_rshiny <- read.csv("/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/processed_data/impc_export.csv", 
                         stringsAsFactors = FALSE)
 
 
 ##Further cleaning of p-value data to increase statistical output
 data_rshiny <- data_rshiny %>% 
-  filter(!is.na(pvalue)) %>% #Removes NA results within pvalue column
+  mutate(
+    pvalue = as.numeric (pvalue)) %>%
+  filter(!is.na(pvalue)) %>% #Removes NA results within pvalue column   
+  
   mutate(
     log_p_value = log10(pvalue), #pvalue is -log10
     Significance_0.05 = (pvalue <= 0.05), #Implementing significant threshold to filter results
@@ -25,7 +28,7 @@ ui <- fluidPage(
   tabsetPanel(
     id = "main_tabs",
     
-    # --- TAB 1: EXPLORE VIA GENE KNOCKOUT (Task 1) ---
+    #  Task 1
     tabPanel("Explore via Gene Knockout",
              sidebarLayout(
                sidebarPanel (
@@ -41,7 +44,7 @@ ui <- fluidPage(
                               max = 1.0,
                               step = 0.001), 
                  actionButton("plot_genotype", "Generate Plot",
-                              class = "btn-primary") 
+                              class = "btn-primary")
                ),
                mainPanel(
                  h3(textOutput("genotype_title")),
@@ -50,30 +53,32 @@ ui <- fluidPage(
              )
     ),
     
-    # --- TAB 2: EXPLORE VIA PHENOTYPE (Task 2 - REVERTED) ---
+    # TAB 2 
     tabPanel("Explore via Phenotype",
              sidebarLayout(
                sidebarPanel(
                  width = 3,
-                 h4("Select Phenotype for Mouse Comparison"),
-                 selectInput(
-                   inputId = "selected_phenotype", 
-                   label = "1. Select a Phenotype (Parameter Name):", 
-                   choices = NULL, 
-                   selected = NULL 
-                 ),
+                 h4("Select Phenotype Group for Mouse Comparison"),
+                 selectInput("param_group_input",
+                             "1. Select Parameter Group:",
+                             choices = NULL),
+                 sliderInput("fdr_threshold_group", "2. Select FDR Threshold (Significant Genes):",
+                             min = 0.001, max = 0.1, value = 0.05, step = 0.005),
                  checkboxInput(inputId = "sig_only_T2", 
                                label = "2. Show only significant results (FDR < 0.05)", 
                                value = FALSE) 
                ),
                mainPanel(
-                 h3(textOutput("phenotype_title")),
-                 plotOutput("phenotype_scatter_plot") 
+                 h3(textOutput("task2_title")),
+                 plotOutput("task2_plot"), 
+                 hr(),
+                 h4("Significant Genes in Selected Group (FDR < 0.05)"),
+                 tableOutput("task2_table")
                )
              )
     ),
     
-    # --- TAB 3: VISUALIZE GENE CLUSTERS (UI Skeleton) ---
+    # Task 3 
     tabPanel("Visualize Gene Clusters",
              sidebarLayout(
                sidebarPanel(
@@ -89,19 +94,20 @@ ui <- fluidPage(
                    step = 1
                  ),
                  
-                 actionButton("run_clustering", "Run Clustering Analysis",
+                 actionButton("run_clustering", "Run K-means Clustering",
                               class = "btn-success"),
                  
                  hr(),
                  textOutput("cluster_info")
                ),
                mainPanel(
-                 h3("Gene Clusters and Group Membership"),
+                 h3("Clustering of Significant Genes Based on Phenotype Scores"),
                  
                  plotOutput("cluster_plot"), 
                  
                  h4("Cluster Membership Table"),
-                 dataTableOutput("cluster_table") 
+                 
+                 tableOutput("cluster_table")
                )
              )
     )
@@ -110,22 +116,22 @@ ui <- fluidPage(
 
 #########Server Logic
 server <- function (input, output, session) {
-  #Task 1   
+  #Task 1    
   observe ({
     updateSelectInput(session,
                       "Genotype_select",
-                      choices = sort(unique(data_rshiny$gene_symbol)))
+                      choices = sort(unique(data_rshiny$Gene_symbol)))
     
     updateSelectInput(session,
-                      "selected_phenotype",
-                      choices = sort(unique(data_rshiny$parameter_name)))
+                      "param_group_input",
+                      choices = sort(unique(data_rshiny$parameter_group)))
     
   })
   
   filtered_genotype_data <- eventReactive(input$plot_genotype, {
     df <- data_rshiny %>%
-      filter(gene_symbol == input$Genotype_select) %>%
-      mutate(parameter_name = factor(parameter_name, levels = unique(parameter_name)))
+      filter(Gene_symbol == input$Genotype_select) %>%
+      mutate(parameter_group = factor(parameter_group, levels = unique(parameter_group)))
     
     return(df)
   })
@@ -141,7 +147,7 @@ server <- function (input, output, session) {
     log_sig_threshold <- -log10(input$Significance_Threshold_T1)
     
     # Logic for a Manhattan-style plot (Phenotype vs -log10(FDR))
-    ggplot(plot_data, aes(x = parameter_name, y = log_fdr, 
+    ggplot(plot_data, aes(x = parameter_group, y = log_fdr, 
                           color = log_fdr > log_sig_threshold)) + 
       geom_point(alpha = 0.8, size = 2) +
       # Add the dynamically calculated significance line
@@ -168,34 +174,30 @@ server <- function (input, output, session) {
   
   #Task 2 
   
-  # Reactive expression to filter data based on Phenotype selection and significance checkbox
-  filtered_phenotype_data <- reactive({
-    req(input$selected_phenotype)
+  # Reactive expression to filter data based on parameter_group 
+  data_task2_reactive <- reactive({
     
-    # 1. Filter by selected Phenotype
-    df <- data_rshiny %>% 
-      filter(parameter_name == input$selected_phenotype) %>%
-      # Ensure factor ordering for plotting
-      mutate(gene_symbol = factor(gene_symbol, levels = unique(gene_symbol)))
+    # Ensures the function only runs when a parameter group is selected
+    req(input$param_group_input)
     
-    # 2. Filter by significance if the checkbox is checked (FDR < 0.05)
-    if (input$sig_only_T2 == TRUE) {
-      df <- df %>% filter(FDR < 0.05)
-    }
-    
-    return(df)
+    # Filter the data for the selected group AND where the FDR is below the threshold
+    data_rshiny %>%
+      filter(parameter_group == input$param_group_input) %>%
+      filter(FDR <= input$fdr_threshold_group) %>%
+      # Select only relevant columns for plotting/table
+      select(Gene_symbol, parameter_name, pvalue, FDR, log_fdr)
   })
-  
   # Render the plot title for Task 2
-  output$phenotype_title <- renderText({
-    paste("Statistical Scores for All Mice with Phenotype:", input$selected_phenotype)
+  output$task2_title <- renderText({
+    paste("Significant Gene Knockouts (FDR <", input$fdr_threshold_group, ") in the", 
+          input$param_group_input, "Phenotype Group")
   })
   
   # Render the plot for Task 2
-  output$phenotype_scatter_plot <- renderPlot({
-    plot_data <- filtered_phenotype_data()
+  output$task2_plot <- renderPlot({
+    plot_data <- data_task2_reactive()
     
-    # Calculate the log threshold (FIXED BUG: using 0.05)
+    # Calculate the log threshold 
     log_sig_threshold <- -log10(0.05)
     
     # Check for empty data
@@ -206,33 +208,41 @@ server <- function (input, output, session) {
                theme_void())
     }
     
-    # Logic to create the **IMPROVED SCATTER PLOT** (Genotype vs -log10(FDR))
-    # This plot clearly shows the "Mice" (Genotypes) that are significant.
-    ggplot(plot_data, aes(x = gene_symbol, y = log_fdr, 
-                          color = log_fdr > log_sig_threshold)) + 
-      geom_point(alpha = 0.8, size = 3) +
-      geom_hline(yintercept = log_sig_threshold, 
-                 linetype = "dashed", color = "red", linewidth = 1) + 
-      
-      labs(title = NULL, # Title handled by renderText
+    
+    # Aggregate data to get the maximum log_fdr for each gene within the group
+    agg_data <- plot_data %>%
+      group_by(Gene_symbol) %>%
+      summarise(max_log_fdr = max(log_fdr, na.rm = TRUE),
+                n_phenotypes = n()) %>%
+      ungroup() %>%
+      arrange(desc(max_log_fdr)) # Order by most significant
+    
+    # Plotting the most significant result for each gene
+    ggplot(agg_data, aes(x = reorder(Gene_symbol, max_log_fdr), y = max_log_fdr)) +
+      geom_bar(stat = "identity", fill = "#0072B2") +
+      coord_flip() +
+      labs(title = NULL,
            x = "Knockout Mouse Genotype",
-           y = "-log10(FDR-Adjusted p-value)") +
-      
-      scale_color_manual(name = "FDR < 0.05",
-                         values = c("gray50", "#D55E00"), # Insignificant, Significant
-                         labels = c("Insignificant", "Significant")) +
-      
-      # Flip coordinates for better readability of many genotypes
-      coord_flip() + 
+           y = paste("Maximum -log10(FDR) in", input$param_group_input)) +
       theme_minimal() +
-      theme(plot.title = element_text(hjust = 0.5),
-            axis.text.y = element_blank(), # Hide Genotype names on axis for clutter
-            axis.ticks.y = element_blank())
-  }, height = 700)
+      theme(axis.text.y = element_text(size = 10))
+  })
   
+  # Render the data table for Task 2
+  output$task2_table <- renderTable({
+    data <- data_task2_reactive() %>%
+      arrange(FDR)
+    
+    # renderTable automatically handles the table
+    return(data)
+  }, 
+  # Add an option to format the numbers ]
+  digits = 5, 
+  # Ensure the headers are displayed n]
+  striped = TRUE,
+  hover = TRUE
+  )
 }
-
-
 
 # Run the application 
 shinyApp(ui = ui, server = server)
