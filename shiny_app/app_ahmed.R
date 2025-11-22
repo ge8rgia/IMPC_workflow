@@ -174,31 +174,39 @@ server <- function (input, output, session) {
   
   #Task 2 
   
+observeEvent(input$sig_only_T2, {
+    if(input$sig_only_T2) {
+      updateSliderInput(session, "fdr_threshold_group", value = 0.05)
+    }
+  }) #Slider fix
+  
   # Reactive expression to filter data based on parameter_group 
   data_task2_reactive <- reactive({
     
     # Ensures the function only runs when a parameter group is selected
     req(input$param_group_input)
     
+   #Use the slider input directly as it updates with button
+    current_threshold <- input$fdr_threshold_group
+    
     # Filter the data for the selected group AND where the FDR is below the threshold
     data_rshiny %>%
       filter(parameter_group == input$param_group_input) %>%
-      filter(FDR <= input$fdr_threshold_group) %>%
+      filter(FDR <= current_threshold) %>%
       # Select only relevant columns for plotting/table
       select(Gene_symbol, parameter_name, pvalue, FDR, log_fdr)
   })
   # Render the plot title for Task 2
   output$task2_title <- renderText({
-    paste("Significant Gene Knockouts (FDR <", input$fdr_threshold_group, ") in the", 
+    paste("Significant Gene Knockouts (FDR <", 
+          if(input$sig_only_T2) 0.05 else input$fdr_threshold_group, 
+          ") in the", 
           input$param_group_input, "Phenotype Group")
   })
   
   # Render the plot for Task 2
   output$task2_plot <- renderPlot({
     plot_data <- data_task2_reactive()
-    
-    # Calculate the log threshold 
-    log_sig_threshold <- -log10(0.05)
     
     # Check for empty data
     if (nrow(plot_data) == 0) {
