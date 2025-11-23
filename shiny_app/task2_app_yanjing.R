@@ -20,6 +20,10 @@ library(dplyr) #we need gene, phenotype, score
 
 data <- read.csv("/Users/yzk/Desktop/DCDM/impc_export.csv",
                  stringsAsFactors = FALSE) #to prevent character vectors (text data) from being automatically converted into factors
+
+data$pvalue[data$pvalue == "NULL"] <- NA
+data$pvalue <- as.numeric(data$pvalue) #there are NULL values now 
+
 phenotype_list <- unique(data$parameter_name)
 phenotype_list
 
