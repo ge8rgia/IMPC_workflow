@@ -37,8 +37,8 @@ The dabase dump contains:
 ## Use Guidance
 1. Set up a MySQL database
 2. Run SQL_IMPC_Workflow_FINAL.sql to create the schema from the start
-⋅⋅⋅ Note: The paths will need to be altered to fit user function
-⋅⋅⋅ Alternatively: Restore the database3.dump for quick use of the pre-populated database
+   - Note: The paths will need to be altered to fit user function
+   - Alternatively: Restore the database3.dump for quick use of the pre-populated database
 3. Use SQL_IMPC_Workflow_QUERIES.sql as examples of interacting with the database and querying
 
 
