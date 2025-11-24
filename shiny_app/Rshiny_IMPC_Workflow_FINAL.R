@@ -82,7 +82,7 @@ ui <- fluidPage(
              )
     ),
     
-    # Tab 3 => Task 3 => Visualize Gene Clusters
+    # Tab 3 => Task 3 => Visualize Gene Clusters - Heatmap
     tabPanel("Gene Clusters - Heatmap",
              sidebarLayout(
                sidebarPanel(
@@ -236,11 +236,11 @@ server <- function(input, output, session) {
     if(input$sig_only_gene){
       main_title <- paste("P-values (Significant) for", input$selected_gene)
       sub_text <- paste("Filtered by P-value <", input$pval_thresh_gene)
-    } #Updates title if P-value selected 
+    } # Updates title if P-value selected 
     else if(input$fdr_only_gene){
       main_title <- paste("FDR-adjusted P-values (Significant) for", input$selected_gene)
       sub_text <- paste("Filtered by FDR <", input$pval_thresh_gene)
-    } #Updates title if FDR option selected 
+    } # Updates title if FDR option selected 
     
     ggplot(manhattan_plot_data, aes(x = reorder(parameter_name, log_p), y = log_p)) +
       geom_point(color = "darkblue") +
