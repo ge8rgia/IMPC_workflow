@@ -9,6 +9,7 @@ library(dplyr)
 library(ggplot2)
 library(ComplexHeatmap)
 library(tidyr)
+library(clustree)
 
 # Load data
 rshinydata <- read.csv("/Users/georgiagoddard/Desktop/DCDM_CW/final_data/impc_export.csv", stringsAsFactors = FALSE)
