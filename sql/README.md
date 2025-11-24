@@ -2,14 +2,14 @@
 
 This directory contains the SQL resources used in the IMPC data processing workflow.
 
-## SQL_IMPC_Workflow_FINAL.sql
+### SQL_IMPC_Workflow_FINAL.sql
 This is the complete SQL script used on MySQL to:
 * Create the database
 * Import the data into the database 
 * Apply appropriate constraints, indexes, and relationships required to reduce redundancy and for the workflow data to be accurately linked to one another
 This is the final executable version of the SQL workflow.
 
-## SQL_IMPC_Workflow_QUERIES.sql
+### SQL_IMPC_Workflow_QUERIES.sql
 This file contains a series of SQL queries, also to be used on MySQL, applicable to the abovementioned database.
 The queries encompass:
 * Simple SELECT functions for data exploration
@@ -21,7 +21,7 @@ The queries encompass:
 This file includes the command required to extract all metadata and raw experimental analysis data from a target gene as the input. 
 The command is transferrable across different input values, and the script includes examples and explanation on how to adapt the command for their desired output. 
 
-## database3.dump
+###  database3.dump
 The dabase dump contains:
 * The executed IMPC database used in our workflow
 * All processed tables after running the final script
@@ -29,7 +29,7 @@ The dabase dump contains:
 
 ##### To restore the dump:
 ```r
-# To restore a database, create a database in mysql and then load that dump file into it 
+# Create a database in MySQL and then load the dump file into it 
 # e.g., 
 /usr/local/mysql/bin/mysql -u <user> -p <newDB_name> < database3.dump 
 ```
@@ -37,8 +37,8 @@ The dabase dump contains:
 ## Use Guidance
 1. Set up a MySQL database
 2. Run SQL_IMPC_Workflow_FINAL.sql to create the schema from the start
-....* Note: The paths will need to be altered to fit user function
-....* Alternatively: Restore the database3.dump for quick use of the pre-populated database
+⋅⋅⋅ Note: The paths will need to be altered to fit user function
+⋅⋅⋅ Alternatively: Restore the database3.dump for quick use of the pre-populated database
 3. Use SQL_IMPC_Workflow_QUERIES.sql as examples of interacting with the database and querying
 
 
