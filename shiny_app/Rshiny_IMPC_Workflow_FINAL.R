@@ -3,6 +3,16 @@
 # the 'Run App' button above.
 #
 
+# Install packages if required
+# Using install.packages("shiny")
+# Using install.packages("DT")
+# Using install.packages("dplyr")
+# Using install.packages("ggplot2")
+# Using install.packages("ComplexHeatmap")
+# Using install.packages("tidyr")
+# Using install.packages("clustree")
+
+# Load libraries 
 library(shiny)
 library(DT)
 library(dplyr)
@@ -11,16 +21,14 @@ library(ComplexHeatmap)
 library(tidyr)
 library(clustree)
 
-# Load data
+# Load merged and cleaned data
 rshinydata <- read.csv("/Users/georgiagoddard/Desktop/DCDM_CW/final_data/impc_export.csv", stringsAsFactors = FALSE)
-# Fix pvalues
+# Fix p-values
 rshinydata$pvalue[rshinydata$pvalue == "NULL"] <- NA
 rshinydata$pvalue <- as.numeric(rshinydata$pvalue)
-#Calculating FDR (BH Procedure) for Pvalues
+# Calculating FDR (BH Procedure) for p-values
 rshinydata <- rshinydata %>%
-  mutate(
-    fdr=p.adjust(pvalue, method = "BH")
-  )
+  mutate(fdr=p.adjust(pvalue, method = "BH"))
 
 # Make lists
 parameter_groups <- sort(unique(rshinydata$parameter_group))
