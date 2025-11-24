@@ -4,6 +4,7 @@ This directory contains the script and data used to generate and execute the RSh
 
 ### Rshiny_IMPC_Workflow_FINAL.R
 This is the complete executable R script used to generate the interactive web app.
+
 The script is only executable locally, it is not publicly available.  
 
 Within this interactive app there are 4 main tabs:
@@ -32,8 +33,11 @@ The user can interact with this app to visualise the following:
 
 ### impc_export.csv
 This is the input file required for the app to run.
+
 The table was generated using an SQL query run in the sql/SQL_IMPC_Workflow_QUERIES.sql file titled:
-  Query the dataset for information including parameter_name
+
+Query the dataset for information including parameter_name
+
 Input the path to the  file in line 15 of the script as follows:
 ```r
 rshinydata <- read.csv("<path_to_file>/impc_export.csv", stringsAsFactors = FALSE)
