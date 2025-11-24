@@ -145,6 +145,26 @@ server <- function(input, output, session) {
       updateCheckboxInput(session, "sig_only_T2", value = FALSE)
     }
   }) 
+#Dropdown logic
+  observeEvent(input$param_group_input, {
+    
+    if (input$param_group_input == "no filter") {
+      updateSelectInput(session, "param_name_input",
+                        choices = c("no filter", parameter_names),
+                        selected = "no filter")  # If no group selected, show ALL parameter names
+    } else {
+      
+      filtered_phenotypes <- rshinydata %>%
+        filter(parameter_group == input$param_group_input) %>%
+        pull(parameter_name) %>%
+        unique() %>%
+        sort() # If a group selected, filter the list of phenotypes so it will only show corresponding parameters
+    
+      updateSelectInput(session, "param_name_input",
+                        choices = c("no filter", filtered_phenotypes),
+                        selected = "no filter") # Update the phenotype dropdown 
+    }
+  })
   
   ## Tab 3
   observeEvent(input$apply_param_filter, {
