@@ -1,5 +1,7 @@
 library(dplyr)
 library(stringr)
+library(tidyr) 
+library(readr)
 
 
 #Function to cross referencing with SOP for cleaning Function
@@ -18,7 +20,7 @@ run_cross_reference <-function(dataset_to_check) {
   
   print("Checking 'gene_symbol' typos")
   dataset_to_check %>% 
-    filter(!str_detect(gene_symbol, "^[A-Z][a-z0-9]+$")) %>%
+    filter(!str_detect(gene_symbol, "^[A-Z0-9][a-z0-9]+$")) %>%
     distinct(gene_symbol) %>%
     print()
   
@@ -34,7 +36,8 @@ run_cross_reference <-function(dataset_to_check) {
     distinct(parameter_id) %>%
     print()
 }
-data <- read.csv("../processed_data/merged_output.csv")
+data <- read.csv("/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/processed_data/merged_output.csv")
+
 
 
 #Quick Summary
@@ -85,6 +88,6 @@ parameter_id = str_replace_all(parameter_id,"-","_")
 run_cross_reference(data_cleaned) #Clean and can now save
 #Save clean data 
 write.csv(data_cleaned,
-          "../processed_data/cleaned_merged_output.csv",
+          "/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/processed_data/cleaned_merged_output.csv",
           row.names = FALSE)
 
