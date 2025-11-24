@@ -28,8 +28,7 @@ The user can interact with this app to visualise the following:
    - Tabs = Gene Clusters - Heatmap, Gene Clusters - K groups
 
 ##### R Version: 4.5.1 (2025-06-13)
-##### Required packages:
-shiny, DT, dplyr, ggplot2, ComplexHeatmap, tidyr, clustree
+##### Required packages: shiny, DT, dplyr, ggplot2, ComplexHeatmap, tidyr, clustree
 
 ### impc_export.csv
 This is the input file required for the app to run.
