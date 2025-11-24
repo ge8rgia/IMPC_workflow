@@ -4,13 +4,13 @@
 #
 
 # Install packages if required
-# Using install.packages("shiny")
-# Using install.packages("DT")
-# Using install.packages("dplyr")
-# Using install.packages("ggplot2")
-# Using install.packages("ComplexHeatmap")
-# Using install.packages("tidyr")
-# Using install.packages("clustree")
+# install.packages("shiny")
+# install.packages("DT")
+# install.packages("dplyr")
+# install.packages("ggplot2")
+# install.packages("ComplexHeatmap")
+# install.packages("tidyr")
+# install.packages("clustree")
 
 # Load libraries 
 library(shiny)
