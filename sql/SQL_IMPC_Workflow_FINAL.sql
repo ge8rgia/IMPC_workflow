@@ -15,7 +15,7 @@ CREATE TABLE Genes (
     CONSTRAINT Genes_pk PRIMARY KEY (Gene_Accession_id)
 );
 # Insert unique gene data into Genes
-LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/cleaned_merged_data.csv'
+LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/clean_merged_data.csv'
 IGNORE INTO TABLE Genes
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -30,7 +30,7 @@ CREATE TABLE Disease_information (
     CONSTRAINT PK_Disease PRIMARY KEY (DO_Disease_id)
 );
 # Insert unique disease_id data into Disease_information 
-LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/cleaned_diseases.csv'
+LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/disease_information_clean.csv'
 IGNORE INTO TABLE Disease_information
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -49,7 +49,7 @@ CREATE TABLE MOUSE_GENE_DISEASE_LINK (
     CONSTRAINT unique_mgi UNIQUE (DO_Disease_id, Gene_Accession_id)  # what does this do?
 ); 
 # Load data onto MOUSE_GENE_DISEASE_LINK
-LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/cleaned_diseases.csv'
+LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/disease_information_clean.csv'
 IGNORE INTO TABLE MOUSE_GENE_DISEASE_LINK
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -67,7 +67,7 @@ CREATE TABLE OMIM_Disease_id (
     CONSTRAINT unique_omim UNIQUE (DO_Disease_id, OMIM_id)
 );
 # Load data into OMIM_Disease_id
-LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/cleaned_diseases.csv'
+LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/disease_information_clean.csv'
 IGNORE INTO TABLE OMIM_Disease_id
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -89,7 +89,7 @@ CREATE TABLE Phenotype_analysis_data (
     CONSTRAINT Fk_Analysis_to_gene FOREIGN KEY (gene_accession_id) REFERENCES Genes(Gene_Accession_id)
 );
 # Load data into Phenotype_analysis_data
-LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/cleaned_merged_data.csv'
+LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/clean_merged_data.csv'
 IGNORE INTO TABLE Phenotype_analysis_data
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -107,7 +107,7 @@ CREATE TABLE Parameters (
 	CONSTRAINT unique_parameter_id UNIQUE (parameter_id)
 );
 # Load data into Parameters table
-LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/cleaned_merged_data.csv'
+LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/clean_merged_data.csv'
 IGNORE INTO TABLE Parameters
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -131,7 +131,7 @@ CREATE TABLE Parameter_information (
 	CONSTRAINT unique_parameter_info_id UNIQUE (parameter_id)
 );
 # Load data onto Parameter_information
-LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/cleaned_parameters.csv'
+LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/IMPC_parameter_clean.csv'
 IGNORE INTO TABLE Parameter_information
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -157,7 +157,7 @@ CREATE TABLE Parameter_OrigID (
     CONSTRAINT parameter_OrigID_pk PRIMARY KEY (impcParameterOrigID)
 );
 # Load data into Parameter_OrigID
-LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/cleaned_parameters.csv'
+LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/IMPC_parameter_clean.csv'
 IGNORE INTO TABLE Parameter_OrigID
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -185,7 +185,7 @@ CREATE TABLE Procedure_information (
     CONSTRAINT IMPC_procedure_pk PRIMARY KEY (procedure_name)
 );
 # Load data into Procedure_information
-LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/cleaned_procedures.csv'
+LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/IMPC_procedure_clean.csv'
 IGNORE INTO TABLE Procedure_information
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -208,7 +208,7 @@ CREATE TABLE PROCEDURE_PARAMETER_LINK (
     CONSTRAINT fk_link_to_parameter FOREIGN KEY (impcParameterOrigID) REFERENCES Parameter_OrigID(impcParameterOrigID)
 );
 # Load data into linking table
-LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/cleaned_procedures.csv'
+LOAD DATA LOCAL INFILE '/Users/georgiagoddard/Desktop/DCDM_CW/final_data/IMPC_procedure_clean.csv'
 IGNORE INTO TABLE PROCEDURE_PARAMETER_LINK
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -226,10 +226,9 @@ CREATE TABLE Parameter_groups (
 );
 # Add pre-determined groups to table
 INSERT INTO Parameter_groups (Group_name) VALUES
-('Weight'), ('Images'), ('Brain'), ('Eye Morphology'), ('Hematology'), ('CBC Chemistry'), ('Morphology/Development'), ('Activity/Movement'), ('Immunology'), ('Echocardiography'
-);
+('Weight'), ('Images'), ('Brain'), ('Eye Morphology'), ('Hematology'), ('CBC Chemistry'), ('Morphology/Development'), ('Activity/Movement'), ('Immunology'), ('Echocardiography');
 
-# Create a tmp table of parameter_id's in the study with their linked parameter_name and procedure_name 
+# Create a tmp table of parameter_ids in the study with their linked parameter_name and procedure_name 
 # Needed to assign groups to parameter_ids
 CREATE TABLE Group_information_tmp (
     parameter_id varchar(30) NOT NULL,

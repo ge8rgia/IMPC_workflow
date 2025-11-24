@@ -117,14 +117,14 @@ JOIN Procedure_information pr ON ppl.procedure_name = pr.procedure_name
 ## Note the limitation that is only telling of the 'IMPC_*' parameter_ids
 ## There is no procedure data on the rest
 
-# Identify the parameter_id's in the research that are linked to a procedure identified above
+# Identify the parameter_ids in the research that are linked to a procedure identified above
 ## Plug in procedure_name from the above mentioned list
 SELECT DISTINCT po.parameter_id FROM Procedure_information pr
 JOIN PROCEDURE_PARAMETER_LINK ppl ON pr.procedure_name = ppl.procedure_name
 JOIN Parameter_OrigID po ON ppl.impcParameterOrigID = po.impcParameterOrigID
 JOIN Parameters p ON po.parameter_id = p.parameter_id
 	WHERE pr.procedure_name = 'Clinical Chemistry';
-## Note the limitation that this will only return 'IMPC_*' parameter_id's 
+## Note the limitation that this will only return 'IMPC_*' parameter_ids 
 
 
 # Filter for the procedures present in the dataset that were mandatory for a standard IMPC research pipeline
@@ -151,7 +151,7 @@ JOIN Procedure_information pr ON ppl.procedure_name = pr.procedure_name
 # Echo (functionality of the heart), Fear Conditioning (for learning and memory), Gross Morphology Embryo E18.5, Gross Morphology Embryo E9.5, Organ Weight
 
 
-# Query a target value and return all information accessible by database
+# Query a target value and return all information accessible by the database
 
 ## Find all results on a select value
 SELECT DISTINCT
@@ -177,7 +177,7 @@ LEFT JOIN Procedure_information pr ON ppl.procedure_name = pr.procedure_name
 LEFT JOIN MOUSE_GENE_DISEASE_LINK mgd ON g.Gene_Accession_id = mgd.Gene_Accession_id
 LEFT JOIN Disease_information di ON mgd.DO_Disease_id = di.DO_Disease_id
 	# Query variable:
-	WHERE pg.Group_name = 'Activity/Movement';
+	WHERE g.Gene_symbol = 'Ercc5';
 
 ## Show only the significant results
 SELECT DISTINCT
@@ -202,10 +202,11 @@ LEFT JOIN Procedure_information pr ON ppl.procedure_name = pr.procedure_name
 LEFT JOIN MOUSE_GENE_DISEASE_LINK mgd ON g.Gene_Accession_id = mgd.Gene_Accession_id
 LEFT JOIN Disease_information di ON mgd.DO_Disease_id = di.DO_Disease_id
 	# Query variable:
-	WHERE pg.Group_name = 'Activity/Movement'
+	WHERE g.Gene_symbol = 'Ercc5'
   	AND pad.pvalue < 0.05;
 
 # Querying for variables other than Gene_symbol
+## This querying can be done ON the above two tables 
 ## Other variables can be substituted into the WHERE command 
 ## Limitation is that the researcher must be aware of the 'shortcut name' given to the table the variable of interest is accessed from
 ## e.g., pi = Parameter_information
@@ -217,3 +218,25 @@ LEFT JOIN Disease_information di ON mgd.DO_Disease_id = di.DO_Disease_id
 ### di.DO_Disease_name = 'Xeroderma pigmentosum group g'
 ### pr.procedure_name = 'Echo'
 ### pg.Group_name = 'Activity/Movement'
+
+# Query the dataset for information including parameter_name
+# The following output was imported as the dataset in the interactive RShiny app
+SELECT  
+    g.Gene_symbol,
+    pad.gene_accession_id,
+    pad.analysis_id,
+    pad.pvalue, 
+    pad.mouse_life_stage,
+    p.parameter_id,
+    pi.parameter_name,
+    pi.parameter_description, 
+    pg.Group_name AS parameter_group, 
+    pad.mouse_strain
+FROM Phenotype_analysis_data pad
+LEFT JOIN Genes g ON pad.gene_accession_id = g.Gene_Accession_id
+LEFT JOIN Parameters p ON pad.parameter_id = p.parameter_id
+LEFT JOIN Parameter_information pi ON p.parameter_id = pi.parameter_id
+LEFT JOIN Parameter_groups pg ON p.Group_id = pg.Group_id
+ORDER BY g.Gene_symbol, pad.pvalue;
+
+
