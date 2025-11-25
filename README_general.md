@@ -1,8 +1,3 @@
----
-title: "README_general"
-format: html
-editor: DCDM_group3
----
 
 # Project Overview 
 
