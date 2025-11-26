@@ -10,7 +10,7 @@ CREATE TABLE Genes (
     CONSTRAINT Gene_accession_pk PRIMARY KEY (Gene_Accession_ID)
 );
 
-LOAD DATA LOCAL INFILE '/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/processed_data/cleaned_merged_output.csv'
+LOAD DATA LOCAL INFILE '/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/processed_data/clean_merged_output.csv'
 IGNORE INTO TABLE Genes
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -111,7 +111,7 @@ CREATE TABLE Phenotype_Analysis (
     CONSTRAINT fk_analysis_to_parameter FOREIGN KEY (parameter_id) REFERENCES PARAMETER_DESCRIPTION(parameterId)
 );
 
-LOAD DATA LOCAL INFILE '/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/processed_data/cleaned_merged_output.csv'
+LOAD DATA LOCAL INFILE '/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/processed_data/clean_merged_output.csv'
 IGNORE INTO TABLE Phenotype_Analysis
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
