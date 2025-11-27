@@ -13,7 +13,7 @@ Project_Root/
 │   ├── data/                      <-- Raw experimental CSVs (Auto-sorted)
 │   ├── metadata/                  <-- SOPs and Reference files (Auto-sorted)
 │   ├── processed_data/            <-- Cleaned CSV outputs
-│   └── impc_export.csv/ <-- SQL query export csv for linkage to RShiny
+│   └── impc_export.csv            <-- SQL query export csv for linkage to RShiny
 └── IMPC_Workflow/                 <-- Source Code Directory
     ├── 1.Cleaning_Process/        <-- ETL Pipeline (R Scripts)
     │   ├── Format_and_Merge.r
@@ -78,6 +78,7 @@ R packages: tidyverse,shiny, shinydashboard, DT, ggplot2, ComplexHeatmap.
 Environment: Supported on Local Machines (Mac/Windows) and HPC environments.
 
 Pathing: All R scripts utilise relative paths (../../Group3), ensuring the code runs immediately upon cloning without modification
+
 
 
 
