@@ -24,9 +24,10 @@ for (f in metadata_files) {
   }
 } #Moving metadata files to their directory
 
-uncategorised_csvs <- list.files(path = project_root, pattern = "\\.csv$", full.names = FALSE)
+csv_belonging_to_data <- list.files(path = project_root, pattern = "\\.csv$", full.names = FALSE)
 #Assumes remaining .csvs are data files and not in data/
-
+exclude_file <- "impc_export.csv" #If impc_export.csv present
+uncategorised_csvs <-csv_belonging_to_data[!csv_belonging_to_data %in% exclude_file]
 if (length(uncategorised_csvs) > 0) {
   for (f in uncategorised_csvs) {
     source_path <- file.path(project_root, f)
