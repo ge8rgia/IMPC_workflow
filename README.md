@@ -71,6 +71,7 @@ To run: Run the cleaning scripts as outlined in Stage 1, export the query result
 
 ## Dependencies & Requirements
 R Version: 4.0+
+DBeaver Version: 25.2.3+
 
 R packages: tidyverse,shiny, shinydashboard, DT, ggplot2, ComplexHeatmap.
 
