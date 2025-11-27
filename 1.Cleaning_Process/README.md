@@ -9,17 +9,20 @@ Here is a comprehensive README.md for your Cleaning Process directory. This docu
 This directory contains the R scripts responsible for organizing the raw project structure, merging raw data files, and cleaning both experimental data and metadata for the IMPC dataset.
 
 
-Group_Folder/
-├Egressed data/             <-- Project Root (Data lives here)
-│   ├── data/                <-- Created automatic after unzipping contentslly
-│   ├── metadata/            <-- Created automaticaafter unzipping contents lly
-│   └── processed_data/      <-- Outputs saved  after running scriptshere
-└── IMPC_Workflow/
-    └── 1.Cleaning_Process/  <-- Scripts live here (Current Directo
-        ├── Format_and_Merge.r
-        ├─data_cleaning.r
-        └── metadata_cleaning_hpc.r
+Directory Structure
 
+```text
+Group_Folder/
+├── Group3/                     <-- Project Root (Data lives here)
+│   ├── data/                   <-- Created automatically after unzipping
+│   ├── metadata/               <-- Created automatically after unzipping
+│   └── processed_data/         <-- Outputs saved here after running scripts
+└── IMPC_Workflow/
+    └── 1.Cleaning_Process/     <-- Scripts live here (Current Directory)
+        ├── Format_and_Merge.r
+        ├── data_cleaning.r
+        └── metadata_cleaning_hpc.r
+```
 
 The scripts must be executed in the following order:
 1. Format_and_Merge.r : Sets up initial folder structure, detects the Group folder as the root and creates the required subdirectories
