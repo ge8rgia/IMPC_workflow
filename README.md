@@ -2,6 +2,7 @@
 # Project Overview 
 
 This repository contains code developed to process and integrate genotypic and phenotypic data from the International Mouse Phenotyping Consortium (IMPC). This workflow transforms the raw expiremental data into a structured format, stores it in a relational database, (MySQL) provides an interactive dashboard (RShiny) for researchers to explore gene-phenotype association through intituitive data visualisation.
+![workflow_pipeline_faster](https://github.com/user-attachments/assets/527fcf19-f970-4077-857b-e09ece99562a)
 
 ## Repository Structure
 The project is organised into two distinct sibling directories, one which will host data whilst the cloned git repo will contain the code & logic. For steps conducted in R relative paths have been assumed so no configuration of path files should be needed. SQL as it was developed locally will require path configuration according to your machine 
@@ -75,5 +76,6 @@ R packages: tidyverse,shiny, shinydashboard, DT, ggplot2, ComplexHeatmap.
 Environment: Supported on Local Machines (Mac/Windows) and HPC environments.
 
 Pathing: All R scripts utilise relative paths (../../Group3), ensuring the code runs immediately upon cloning without modification
+
 
 
