@@ -22,7 +22,7 @@ library(tidyr)
 library(clustree)
 
 # Load merged and cleaned data
-rshinydata <- read.csv("../../impc_export.csv", stringsAsFactors = FALSE)
+rshinydata <- read.csv("../../Group3/impc_export.csv", stringsAsFactors = FALSE)
 # Fix p-values
 rshinydata$pvalue[rshinydata$pvalue == "NULL"] <- NA
 rshinydata$pvalue <- as.numeric(rshinydata$pvalue)
