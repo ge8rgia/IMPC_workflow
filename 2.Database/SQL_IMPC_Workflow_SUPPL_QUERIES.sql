@@ -1,5 +1,5 @@
 # IMPC_SQL_Workflow QUERIES
-## For research purposes 
+## For further research purposes 
 
 # Shortcut names used throughout this document for simplicity
 ## Phenotype_analysis_data = pad
@@ -13,6 +13,7 @@
 ## MOUSE_GENE_DISEASE_LINK = mgd
 ## Disease_information = di
 ## OMIM_Disease_id = od
+
 
 USE IMPC_Database_FINAL;
 
@@ -177,9 +178,11 @@ LEFT JOIN Procedure_information pr ON ppl.procedure_name = pr.procedure_name
 LEFT JOIN MOUSE_GENE_DISEASE_LINK mgd ON g.Gene_Accession_id = mgd.Gene_Accession_id
 LEFT JOIN Disease_information di ON mgd.DO_Disease_id = di.DO_Disease_id
 	# Query variable:
-	WHERE g.Gene_symbol = 'Ercc5';
+	WHERE g.Gene_symbol in ('Ido1', 'Atrip', 'Kif9', 'Tbc1d22a');
 
 ## Show only the significant results
+
+# Query a target value and return all information accessible by the database
 SELECT DISTINCT
     g.Gene_symbol,
     g.Gene_Accession_id,
@@ -201,8 +204,8 @@ LEFT JOIN PROCEDURE_PARAMETER_LINK ppl ON po.impcParameterOrigID = ppl.impcParam
 LEFT JOIN Procedure_information pr ON ppl.procedure_name = pr.procedure_name
 LEFT JOIN MOUSE_GENE_DISEASE_LINK mgd ON g.Gene_Accession_id = mgd.Gene_Accession_id
 LEFT JOIN Disease_information di ON mgd.DO_Disease_id = di.DO_Disease_id
-	# Query variable:
-	WHERE g.Gene_symbol = 'Ercc5'
+	# Query variables:
+	WHERE g.Gene_symbol IN ('Ido1', 'Atrip', 'Kif9', 'Tbc1d22a')
   	AND pad.pvalue < 0.05;
 
 # Querying for variables other than Gene_symbol
@@ -218,6 +221,32 @@ LEFT JOIN Disease_information di ON mgd.DO_Disease_id = di.DO_Disease_id
 ### di.DO_Disease_name = 'Xeroderma pigmentosum group g'
 ### pr.procedure_name = 'Echo'
 ### pg.Group_name = 'Activity/Movement'
+
+# Identify parameter_id and parameter_name tested on query genes
+SELECT
+    g.Gene_symbol,
+    COUNT(DISTINCT pad.parameter_id) AS parameters_tested,
+    (SELECT COUNT(*) FROM Parameters) 
+      - COUNT(DISTINCT pad.parameter_id) AS parameters_not_tested
+FROM Genes g
+LEFT JOIN Phenotype_analysis_data pad ON pad.gene_accession_id = g.Gene_Accession_id
+WHERE g.Gene_symbol IN ('Ido1', 'Atrip', 'Kif9', 'Tbc1d22a')
+GROUP BY g.Gene_symbol;
+# All 180 unique parameter_id's are counted
+
+# Lists all parameter_id and parameter_name tested on 4 selected genes 
+SELECT parameter_information_id_fk, parameter_name from Parameter_information where parameter_information_id_fk IS NOT NULL;
+
+# List all procedure_name information used within the experimental data
+SELECT DISTINCT
+    pr.procedure_name,
+    pr.procedure_description
+FROM Phenotype_analysis_data pad
+JOIN Parameter_OrigID po ON pad.parameter_id = po.parameter_id
+JOIN PROCEDURE_PARAMETER_LINK ppl ON po.impcParameterOrigID = ppl.impcParameterOrigID
+JOIN Procedure_information pr ON ppl.procedure_name = pr.procedure_name
+ORDER BY pr.procedure_name;
+
 
 # Query the dataset for information including parameter_name
 # The following output was imported as the dataset in the interactive RShiny app
@@ -237,6 +266,8 @@ LEFT JOIN Genes g ON pad.gene_accession_id = g.Gene_Accession_id
 LEFT JOIN Parameters p ON pad.parameter_id = p.parameter_id
 LEFT JOIN Parameter_information pi ON p.parameter_id = pi.parameter_id
 LEFT JOIN Parameter_groups pg ON p.Group_id = pg.Group_id
-ORDER BY g.Gene_symbol, pad.pvalue;
+ORDER BY g.Gene_symbol, pad.pvalue
+
+
 
 
