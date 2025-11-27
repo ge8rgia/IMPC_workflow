@@ -5,6 +5,11 @@ raw expirmental data and associated metadata from the IMPC dataset, we egressed 
 The scripts are designed to use relative paths and assume the following directory hierachy
 Here is a comprehensive README.md for your Cleaning Process directory. This documentation explains the execution order, directory structure, and the specific function of each script based on the code you have provided.
 
+IMPORTANT
+After unzipping egressed data at the Project Root layer (e.g. unzip Group3.zip), clone this git repoistroy to begin the pipeline.
+
+After unzipping your directory will have GroupX.zip, GroupX/, clone the repoistory on this level and proceeed with the steps outlined below.
+
 1. Cleaning & Pre-processing Pipeline
 This directory contains the R scripts responsible for organizing the raw project structure, merging raw data files, and cleaning both experimental data and metadata for the IMPC dataset.
 
@@ -25,7 +30,7 @@ Group_Folder/
 ```
 
 The scripts must be executed in the following order:
-1. Format_and_Merge.r : Sets up initial folder structure, detects the Group folder as the root and creates the required subdirectories after unzipping egressed data at the Project Root layer (e.g. unzip Group3.zip),before organising them based on this, raw data files go into data/ and pre-defined metadata files go into metadata/
+1. Format_and_Merge.r : Sets up initial folder structure, detects the Group folder as the root and creates the required subdirectories,before organising them based on this, raw data files go into data/ and pre-defined metadata files go into metadata/
 Merges all data/ files into a standardised format and saves this dataframe as an output in processed_data/.
 
 2. data_cleaning.r: Standardises this merged data frame according to SOP criteria and outputs
