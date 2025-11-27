@@ -1,42 +1,48 @@
----
-title: "data_cleaning"
-format: html
-editor: 
-  markdown: 
-    wrap: 72
----
 
-## Libraries and Packages
-
-```{r}
+#  title: "data_cleaning"
+#editor: 
+#format: html
+ # wrap: 72
+#  markdown: 
+#---
+  
+  ## Libraries and Packages
+  
+  
 library(dplyr)
 library(stringr)
-```
 
-## Setting working directory, loading data and loading SOP
 
-```{r}
-setwd("/scratch/grp/msc_appbio/DCDM/Group3")
-data <- read.csv("/scratch/grp/msc_appbio/DCDM/Group3/processed_data/merged_output.csv")
-SOP <- read.csv("/scratch/grp/msc_appbio/DCDM/Group3/metadata/IMPC_SOP.csv")
+## Setting paths via relative directory structure, loading data and loading SOP 
+project_root <- "../../Group3"
+input_data_path <- file.path(project_root, "processed_data", "merged_output.csv")
+sop_path        <- file.path(project_root, "metadata", "IMPC_SOP.csv")
+output_path     <- file.path(project_root, "processed_data", "clean_merged_data.csv")
+
+
+# Check if files exist before reading
+if (!file.exists(input_data_path)) stop("Error: merged_output.csv not found. Run Format_and_Merge.r first.")
+if (!file.exists(sop_path)) stop("Error: IMPC_SOP.csv not found.")
+
+data <- read.csv(input_data_path)
+SOP  <- read.csv(sop_path)
 head(SOP)
-```
 
 ## Checking unique values in each field
 
-```{r}
+
 for (field in colnames(data)) {
   count <- length(unique(data[ ,field]))
   print(paste("Currently", count, "unique values in", field))
 }
 # 25358 unique values in analysis_id (total data rows), 186 unique values in gene_accession_id, 182 unique values in gene_symbol, 14 unique values in mouse_life_stage, 17 unique values in mouse_strain, 319 unique values in parameter_id, 157 unique values in parameter_name, 25302 unique values in pvalue
-```
+
 
 # Checking each column for errors, inconsistencies, referencing SOP
 
 ## 1. Gene Accession ID
 
-```{r}
+
 # Checking that gene_accession_id strings are between 9:11 length
 all(str_length(data$gene_accession_id) %in% 9:11) #TRUE
 
@@ -46,21 +52,21 @@ print(typo_geneaccession_id)
 # FALSE, therefore some gene_accession_id are not capitalised
 data[ data$gene_accession_id != toupper(data$gene_accession_id), "gene_accession_id" ] %>% unique()
 # Prints non-capitalised entries
-```
+
 
 ## 2. Gene Symbol
 
-```{r}
+
 ## Checking that mouse gene_symbol strings are between 1:13 in length
 all(str_length(data$gene_symbol) %in% 1:13) #TRUE
 
 print(unique(data[ ,"gene_symbol"]))
 # All in different formats
-```
+
 
 ## 3. Mouse Life Stage
 
-```{r}
+
 # Checking that mouse_life_stage strings are between 4:17 in length
 all(str_length(data$mouse_life_stage) %in% 4:17) #FALSE
 
@@ -70,11 +76,11 @@ data$mouse_life_stage[!(str_length(data$mouse_life_stage) %in% 4:17)] #prints th
 
 print(unique(data[ ,"mouse_life_stage"])) 
 # Contains wrong formats - shows 14 possible mouse life stages, there are only 7 possible stages: E12.5, E15.5, E18.5, E9.5, Early adult, Later adult, Middle aged adult
-```
+
 
 ## 4. Mouse Strain
 
-```{r}
+
 # Checking that mouse_strain strings are between 3:5 in length
 all(str_length(data$mouse_strain) %in% 3:5) #TRUE 
 
@@ -85,11 +91,11 @@ print(unique(data[ ,"mouse_strain"]))
 data%>%
   group_by(mouse_strain) %>%
   summarise(count=n(), .groups="drop")
-```
+
 
 ## 5. Parameter ID
 
-```{r}
+
 # Checking that parameter_id strings are between 15:20 in length
 all(str_length(data$parameter_id) %in% 15:20) #TRUE
 
@@ -102,11 +108,11 @@ data[ data$parameter_id != toupper(data$parameter_id), "parameter_id" ] %>% uniq
 
 # _ standard 
 sum(grepl("-", data$parameter_id)) #1128 contain a - instead of _
-```
+
 
 ## 6. Parameter Name
 
-```{r}
+
 # Checking that parameter_name strings are between 2:74 in length
 all(str_length(data$parameter_name) %in% 2:74) #TRUE 
 
@@ -119,18 +125,18 @@ sum(!grepl("^[A-Z]", data$parameter_name)) #1267 do not start with capital
 sum(grepl("^[0-9%]", data$parameter_name)) #1267 start with number or % sign
 
 #Therefore, the remainder of entries start with a capital letter and are in standard format
-```
+
 
 ## 7. p-value
 
-```{r}
+
 summary(data$pvalue)
 # Minimum = -0.4870 and maximum = 1.4998 - this is an error, minimum = 0, maximum = 1
-```
+
 
 # Cleaning Pipeline
 
-```{r}
+
 valid_strains <- c("C57BL", "B6J", "C3H", "129SV") #Specifiying valid mouse strains from SOP
 
 cleaned_data <- data %>% 
@@ -149,20 +155,20 @@ cleaned_data <- data %>%
       mouse_strain %in% valid_strains ~ mouse_strain, #Keeps valid strains, capitalising only first letter of string, sets missing values to NA 
       TRUE ~ NA_character_
     ),
-  
+    
     parameter_id = toupper(parameter_id), #All parameter_id to capitals, standard format
     parameter_id = str_replace_all(parameter_id, "-", "_"), #Replacing - to _
     
     pvalue=as.numeric(pvalue),
     pvalue=if_else(pvalue <0 | pvalue >1, NA_real_, pvalue) #Setting pvalues which do not fit SOP min/max to NA
   )  
-```
+
 
 # Verifying Cleaning
 
 ## 1. Verify Gene Accession ID
 
-```{r}
+
 cleaned_data %>%
   filter(gene_accession_id!= toupper(gene_accession_id)) %>%
   distinct(gene_accession_id)
@@ -170,28 +176,28 @@ cleaned_data %>%
 # Confirm with True/False vector
 all(cleaned_data$gene_accession_id == toupper(cleaned_data$gene_accession_id))
 # TRUE - all strings are capitalised
-```
+
 
 ## 2. Verifying Gene Symbol
 
-```{r}
+
 cleaned_data %>% filter(!str_detect(gene_symbol,"^[A-Z][a-z0-9]+$")) %>%
   distinct(gene_symbol)
 # 0 - all strings begin with a capital
-```
+
 
 ## 3. Verifying Mouse Life Stage
 
-```{r}
+
 print(unique(cleaned_data$mouse_life_stage)) 
 # Now the correct format - all begin with captital letter
 # 6/7 possible mouse_life_stages, in our data there are no E15.5 stage mice
 # NAs in capitals 
-```
+
 
 ## 4. Verifying Mouse Strain
 
-```{r}
+
 cleaned_data%>%
   group_by(mouse_strain) %>%
   summarise(count=n(), .groups="drop") #Total frequency of different mouse strains
@@ -202,11 +208,11 @@ sum(cleaned_data$mouse_strain == "129SV", na.rm = TRUE) #720
 
 #sum(data$mouse_strain == "B6J", na.rm = TRUE) #0 of B6J strain
 #sum(data$mouse_strain == "C3H", na.rm = TRUE) #0 of C3H strain
-```
+
 
 ## 5. Verifying Parameter ID
 
-```{r}
+
 cleaned_data %>%
   filter(parameter_id != toupper(parameter_id)) %>%
   distinct(parameter_id)
@@ -217,21 +223,21 @@ all(cleaned_data$parameter_id == toupper(cleaned_data$parameter_id))
 
 sum(grepl("-", cleaned_data$parameter_id))
 #0 contain - now
-```
+
 
 ## 6. Verifying p-value
 
-```{r}
+
 summary(cleaned_data$pvalue)
 # Minimum = 0.0000, Maximum = 1.0000
 
 # Counting NAs in pvalue
 sum(is.na(cleaned_data$pvalue)) ##266 NAs
-```
+
 
 # Fixing Parameter Name inconsistencies
 
-```{r}
+
 # Mismatches:
 # ‘Mean cell haemoglobin concentration’ and ‘Mean cell hemoglobin concentration’
 # ‘Mean cell volume’ + ‘Mean-cell-volume’
@@ -250,20 +256,17 @@ sum(is.na(cleaned_data$pvalue)) ##266 NAs
 # Replace mismatched names
 cleaned_data$parameter_name <-
   gsub("Mean cell haemoglobin concentration", "Mean cell hemoglobin concentration",
-  gsub("Mean-cell-volume", "Mean cell volume",
-  gsub("Mean corpuscular haemoglobin", "Mean corpuscular hemoglobin",
-  gsub("Mean-corpuscular-haemoglobin", "Mean corpuscular hemoglobin",
-  gsub("Platelets-count", "Platelet count",
-  gsub("Haemoglobin", "Hemoglobin",
-      cleaned_data$parameter_name))))))
+       gsub("Mean-cell-volume", "Mean cell volume",
+            gsub("Mean corpuscular haemoglobin", "Mean corpuscular hemoglobin",
+                 gsub("Mean-corpuscular-haemoglobin", "Mean corpuscular hemoglobin",
+                      gsub("Platelets-count", "Platelet count",
+                           gsub("Haemoglobin", "Hemoglobin",
+                                cleaned_data$parameter_name))))))
 
 # Check that this has not affected string length
 all(str_length(cleaned_data$parameter_name) %in% 2:74) #TRUE
-```
+
 
 ## Saving cleaned data
-
-```{r}
-write.csv(cleaned_data, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/clean_merged_data.csv",
-          row.names = FALSE)
-```
+write.csv(cleaned_data, file = output_path, row.names = FALSE)
+message(paste("Cleaned data saved to:", output_path))

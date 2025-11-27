@@ -1,31 +1,37 @@
----
-title: "metadatacleaning"
-format: html
----
+
+#title: "metadatacleaning"
+#format: html
+
 
 # Libraries and Packages
 
-```{r}
+
 library(dplyr)
 library(stringr)
 library(readr)
 library(tidyr)
-```
 
-## Setting working directory, loading data
 
-```{r}
-setwd("/scratch/grp/msc_appbio/DCDM/Group3")
-disease_info <- read_tsv("/scratch/grp/msc_appbio/DCDM/Group3/metadata/Disease_information.txt", col_types = cols(.default = "c"))
-IMPC_parameter <- read_csv("/scratch/grp/msc_appbio/DCDM/Group3/metadata/IMPC_parameter_description.txt", col_types = cols(.default = "c"))
-IMPC_procedure <- read_csv("/scratch/grp/msc_appbio/DCDM/Group3/metadata/IMPC_procedure.txt", col_types = cols(.default = "c"))
-```
+## Setting working directory, loading data using relative paths, adhering to the directory structure 
+project_root <- "../../Group3"
+disease_path<- file.path(project_root, "metadata", "Disease_information.txt")
+param_path<- file.path(project_root, "metadata", "IMPC_parameter_description.txt")
+proc_path<- file.path(project_root, "metadata", "IMPC_procedure.txt")
 
+disease_info   <- read_tsv(disease_path, col_types = cols(.default = "c"))
+IMPC_parameter <- read_csv(param_path, col_types = cols(.default = "c"))
+IMPC_procedure <- read_csv(proc_path, col_types = cols(.default = "c"))
+
+#Preparing output files post cleaning
+clean_data_path <- file.path(project_root, "processed_data", "clean_merged_data.csv")
+out_disease <- file.path(project_root, "processed_data", "disease_information_clean.csv")
+out_param   <- file.path(project_root, "processed_data", "IMPC_parameter_clean.csv")
+out_proc    <- file.path(project_root, "processed_data", "IMPC_procedure_clean.csv")
 # Renaming Columns
 
 ## 1. Disease Information
 
-```{r}
+
 disease_info <- disease_info %>%
   rename(DO_Disease_ID = `DO Disease ID`) #DO_Disease_ID
 disease_info <- disease_info %>%
@@ -34,26 +40,26 @@ disease_info <- disease_info %>%
   rename(OMIM_ID = `OMIM IDs`) #OMIM_ID
 disease_info <- disease_info %>%
   rename(Mouse_MGI_ID = `Mouse MGI ID`) #Mouse_MGI_ID
-```
+
 
 ## 2. IMPC Parameter Description
 
-```{r}
+
 IMPC_parameter <- IMPC_parameter %>%
   rename(parameter_id = parameterId) #parameter_id to match the data
-```
+
 
 # Function to perform initial checks on metadata
 
-```{r}
+
 audit_file <- function(df, name) {
   cat("\n---", name, "---\n")
   cat("Rows:", nrow(df), "| Columns:", ncol(df), "\n") #Prints dimensions of dataset
   cat("Duplicates:", sum(duplicated(df)), "\n") #Checks for duplicate rows
-
+  
   missing <- colSums(is.na(df)) #Counts NA/missing values 
   missing <- missing[missing > 0]
-
+  
   if (length(missing) > 0) {
     cat("Missing values:\n")
     print(missing)
@@ -61,20 +67,20 @@ audit_file <- function(df, name) {
     cat("No missing values.\n")
   }
 }
-```
+
 
 # Initial Checks
 
 ## 1. Disease Information
 
-```{r}
+
 audit_file(disease_info, "Disease Information")
 # 2925 rows, 4 columns, 0 duplicates, no missing values
-```
+
 
 ## 2. IMPC Parameter Description
 
-```{r}
+
 audit_file(IMPC_parameter, "IMPC Parameter Descriptions")
 # 5325 rows, 4 columns, 14 duplicates, 2691 missing description entries
 
@@ -83,19 +89,19 @@ IMPC_parameter %>%
   count(impcParameterOrigId) %>%
   filter (n > 1)
 # Duplicates contain exactly the same information so can be removed
-```
+
 
 ## 3. IMPC Procedure
 
-```{r}
+
 audit_file(IMPC_procedure, "IMPC Procedure")
 # 5311 rows, 4 columns, 0 duplicates, 3481 missing description entires
 cat("Empty descriptions:", sum(is.na(IMPC_procedure$description)), "\n") 
-```
+
 
 # Function to check Disease Information format
 
-```{r}
+
 # Checking disease info for inconsistencies
 check_disease_info <- function(df) {
   cat("\n--- Disease Format Check ---\n")
@@ -103,18 +109,18 @@ check_disease_info <- function(df) {
   cat("Invalid MGI:",  sum(!str_detect(df$`Mouse_MGI_ID`,  "^MGI:\\d+$"),  na.rm = TRUE), "\n") #MGI:.... format
   cat("Multi-OMIM IDs:", sum(str_detect(df$`OMIM_ID`, "\\|"), na.rm = TRUE), "\n") #Checking for multiple OMIMs in a single cell
 }
-```
+
 
 ## Checking Disease Information format
 
-```{r}
+
 check_disease_info(disease_info)
 # 0 invalid DOID, 0 invalid MGI, 422 Multi-OMIM IDs
-```
+
 
 # Function to check IMPC Parameter and IMPC procedure relationship
 
-```{r}
+
 check_integrity <- function(params, procs) {
   cat("--- Parameter-Procedure Integrity ---\n")
   
@@ -132,21 +138,21 @@ check_integrity <- function(params, procs) {
   }
   cat("\n")
 }
-```
+
 
 # Checking the Parameter and Procedure Relationship
 
-```{r}
+
 check_integrity(IMPC_parameter, IMPC_procedure)
 # 14 duplicate parameter IDs - as seen before
 # 0 procedure IDs missing from parameters
-```
+
 
 # Checking capitalization and spacing format
 
 ## 1. Disease Information
 
-```{r}
+
 # Checking that DO_Disease_Name are in standard format - beginning with capital (format of other columns already checked with check_disease_info function)
 all(grepl("^[A-Z]", disease_info$DO_Disease_Name)) #FALSE
 
@@ -155,11 +161,11 @@ sum(grepl("^[a-z]", disease_info$DO_Disease_Name)) #2204 do not begin with capit
 # View the disease names not capitalised
 diseasename_noncaps <- disease_info$DO_Disease_Name[grepl("^[a-z]", disease_info$DO_Disease_Name)]
 diseasename_noncaps
-```
+
 
 ## 2. IMPC Parameter Description
 
-```{r}
+
 # name Column
 
 all(grepl("^[A-Z]", IMPC_parameter$name)) #FALSE
@@ -202,11 +208,11 @@ paramdescrip_not_upper # different formats, also shows missing descriptions (NAs
 
 # Check that no parameter_id begin with lowercase
 all(!grepl("^[a-z]", IMPC_parameter$parameter_id)) #TRUE
-```
+
 
 ## 3. IMPC Procedure
 
-```{r}
+
 # Check if data begin with capital letter
 
 # Name colummn 
@@ -225,13 +231,13 @@ proceduredescription_noncaps
 sum(grepl("_", IMPC_procedure$description)) #67 have underscores
 procdescrip_underscore <- IMPC_procedure$description[grepl("_", IMPC_procedure$description)]
 procdescrip_underscore
-```
+
 
 # Cleaning
 
 ## 1. Cleaning Disease Information
 
-```{r}
+
 
 #1. Separating rows with multiple OMIM_IDs so that they are easier to use in downstream analyses
 #2. Cleaning format of names: all begin with capital letter
@@ -241,11 +247,11 @@ disease_info_clean <- disease_info %>%
   mutate(
     DO_Disease_Name = str_to_sentence(DO_Disease_Name)
   )
-```
+
 
 ## 2. Cleaning IMPC Parameter
 
-```{r}
+
 #1. Cleaning formatting of description column: _ and capitalising 
 #2. Cleaning formatting of name columns: capitalising
 #3. Harmonizing descriptions 
@@ -274,7 +280,7 @@ IMPC_parameter_clean <- IMPC_parameter %>%
   #Harmonize descriptions by name 
   group_by(name) %>%
   mutate(
-  description = {
+    description = {
       if (n_distinct(description, na.rm = TRUE) > 1) { 
         #Checking distinct descriptions
         #If multiple different descriptions - then need to be harmonize
@@ -294,11 +300,11 @@ IMPC_parameter_clean <- IMPC_parameter %>%
   
   # Remove duplicates by impcParameterOrigId
   distinct(impcParameterOrigId, .keep_all = TRUE)
-```
+
 
 ## 3. Cleaning IMPC Procedure
 
-```{r}
+
 #1. Cleaning formatting: _ and capitalising
 #2. Ensuring that each row with the same procedure name has the same description 
 
@@ -320,13 +326,13 @@ IMPC_procedure_clean <- IMPC_procedure %>%
   }) %>%
   ungroup() %>%
   distinct()
-```
+
 
 # Check
 
 ## 1. Checking Disease Information
 
-```{r}
+
 
 # Check for multi-OMIM IDs
 check_disease_info(disease_info_clean)
@@ -341,11 +347,11 @@ sum(str_detect(disease_info_clean$DO_Disease_Name, "^[0-9]")) #4 start with numb
 
 # Checks that besides the entries that start with a number, the rest begin with capitals
 all(grepl("^[A-Z]", disease_info_clean$DO_Disease_Name[!grepl("^[0-9]", disease_info_clean$DO_Disease_Name)]), na.rm = TRUE) #TRUE 
-```
+
 
 ## 2. Checking IMPC Parameter
 
-```{r}
+
 audit_file(IMPC_parameter_clean, "IMPC Parameter Cleaned Descriptions")
 #0 duplicates
 
@@ -365,23 +371,23 @@ IMPC_parameter_clean %>%
   filter(!str_detect(name, "^[A-Z0-9%]"))
 
 sum(grepl("^[a-z]", IMPC_parameter_clean$description)) #0 begin with lower case letter 
-```
+
 
 ## 3. Checking IMPC Procedure
 
-```{r}
+
 all(grepl("^[A-Z]", IMPC_procedure_clean$description)) #FALSE
 
 # Check why:
 sum(grepl("^[A-Z]", IMPC_procedure_clean$description)) #2056 rows in capital
 sum(is.na(IMPC_procedure_clean$description)) #3255 rows are NA/empty fields
 # 5311 total rows, therefore all descriptions are in capital, cleaning has worked
-```
+
 
 # Dealing with non-IMPC Parameter ID
-```{r}
+
 # Loading cleaned data
-clean_data <- read.csv("/scratch/grp/msc_appbio/DCDM/Group3/processed_data/clean_merged_data.csv", sep = ",", header = TRUE)
+clean_data <- read.csv(clean_data_path, sep = ",", header = TRUE)
 head(clean_data$parameter_id)
 
 # Extracting all parameter_ids from data that are not in the IMPC Parameter metadata (missing), do not begin with IMPC... e.g. ESLIM..., HMGULA..., M_G_P... 
@@ -407,17 +413,9 @@ new_parameter_id <- mismatched_id %>%
 
 # Adding the missing parameter_ids to the IMPC Parameter description metadata with the appropriate description 
 IMPC_parameter_clean_final <- bind_rows(IMPC_parameter_clean, new_parameter_id)
-```
+
 
 # Saving as new .csv
-```{r}
-write.csv(disease_info_clean, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/disease_information_clean.csv",
-          row.names = FALSE)
-
-write.csv(IMPC_parameter_clean_final, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/IMPC_parameter_clean.csv",
-          row.names = FALSE)
-
-write.csv(IMPC_procedure_clean, file = "/scratch/grp/msc_appbio/DCDM/Group3/processed_data/IMPC_procedure_clean.csv",
-          row.names = FALSE)
-```
-
+write.csv(disease_info_clean, file = out_disease, row.names = FALSE)
+write.csv(IMPC_parameter_clean_final, file = out_param, row.names = FALSE)
+write.csv(IMPC_procedure_clean, file = out_proc, row.names = FALSE)
