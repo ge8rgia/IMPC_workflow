@@ -1,13 +1,46 @@
 #install.packages("tidyverse")
 library(tidyverse)
+#Organising unzipped files into their respective directories
+project_root <- "../../Group3"
+dirs_to_create <- c("data", "metadata", "processed_data")
+for (d in dirs_to_create) {
+  dir.create(file.path(project_root, d), showWarnings = FALSE, recursive = TRUE)
+} #Creates the directories
 
-#Format and collate the data
-input_dir <-"/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/data/"
-output_dir <-"/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/processed_data/"
-sop_file_path<- "/Users/ahmedalshagga/Desktop/DBDM_COURSEWORK_DATA/metadata/IMPC_SOP.csv"
+#Classifies the metadata files when unzipped
+metadata_files <- c("IMPC_SOP.csv", 
+                    "Disease_information.txt", 
+                    "IMPC_parameter_description.txt", 
+                    "IMPC_procedure.txt",
+                    "query_genes.csv")
 
-#Creating output dir if it doesnt exist 
-dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+for (f in metadata_files) {
+  source_path <- file.path(project_root, f)
+  dest_path   <- file.path(project_root, "metadata", f)
+  
+  if (file.exists(source_path)) {
+    file.rename(from = source_path, to = dest_path)
+    message(paste("Moved to metadata:", f))
+  }
+} #Moving metadata files to their directory
+
+uncategorised_csvs <- list.files(path = project_root, pattern = "\\.csv$", full.names = FALSE)
+#Assumes remaining .csvs are data files and not in data/
+
+if (length(uncategorised_csvs) > 0) {
+  for (f in uncategorised_csvs) {
+    source_path <- file.path(project_root, f)
+    dest_path   <- file.path(project_root, "data", f)
+    
+    file.rename(from = source_path, to = dest_path)
+    message(paste("Moved to data:", f))
+  }
+}
+
+#Format and collate the data using relative paths, and is running inside IMPC directory which is a subdirectory of Group3/
+input_dir     <- file.path(project_root, "data")
+output_dir    <- file.path(project_root, "processed_data")
+sop_file_path <- file.path(project_root, "metadata", "IMPC_SOP.csv")
 
 sop_data<-read_csv(sop_file_path, show_col_types = FALSE)
 cat("Retrieving headers from SOP to cross reference")
