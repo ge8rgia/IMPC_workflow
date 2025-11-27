@@ -21,7 +21,7 @@ library(ComplexHeatmap)
 library(tidyr)
 library(clustree)
 
-# Load merged and cleaned data
+# Load merged and cleaned data via relative path
 rshinydata <- read.csv("../../Group3/impc_export.csv", stringsAsFactors = FALSE)
 # Fix p-values
 rshinydata$pvalue[rshinydata$pvalue == "NULL"] <- NA
