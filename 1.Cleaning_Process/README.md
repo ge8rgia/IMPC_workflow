@@ -25,8 +25,7 @@ Group_Folder/
 ```
 
 The scripts must be executed in the following order:
-1. Format_and_Merge.r : Sets up initial folder structure, detects the Group folder as the root and creates the required subdirectories
-Before organising them based on this, raw data files go into data/ and pre-defined metadata files go into metadata/
+1. Format_and_Merge.r : Sets up initial folder structure, detects the Group folder as the root and creates the required subdirectories after unzipping egressed data at the Project Root layer (e.g. unzip Group3.zip),before organising them based on this, raw data files go into data/ and pre-defined metadata files go into metadata/
 Merges all data/ files into a standardised format and saves this dataframe as an output in processed_data/.
 
 2. data_cleaning.r: Standardises this merged data frame according to SOP criteria and outputs
